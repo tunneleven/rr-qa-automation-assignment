@@ -1,0 +1,17 @@
+# Local agent configuration
+.pi/
+skills-lock.json
+
+# Local environments and caches
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+playwright-report/
+test-results/
+artifacts/*
+!artifacts/.gitkeep
+*.py[cod]
+.env
+.env.*
+!.env.example
