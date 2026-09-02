@@ -1,0 +1,10 @@
+Observed: 2026-09-01
+After selecting Popular page 58698 and reaching the generic error, the following top-menu destinations were tested without a reload:
+
+| Destination | Requested page | Result |
+|---|---:|---|
+| Trend | 58698 | HTTP 400; generic error remained |
+| Newest | 58698 | HTTP 400; generic error remained |
+| Top rated | 58698 | HTTP 400; generic error remained |
+
+Each destination also produced a successful page-1 request during the route transition, but the retained invalid-page request produced the final error state. API credentials are redacted.

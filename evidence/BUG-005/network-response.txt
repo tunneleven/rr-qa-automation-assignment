@@ -1,0 +1,16 @@
+Observed: 2026-09-01
+
+Visible filter state before selection: start=1900, end=2025
+Action: selected start year 2025
+Visible filter state after selection: start=2025, end=2025
+
+Request sent by the browser:
+GET https://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&release_date.gte=2025-01-01&release_date.lte=2026-12-31&vote_average.gte=0&vote_average.lte=5&page=1&api_key=<redacted>
+Response: HTTP 200; total_results=78135; total_pages=3907
+
+Examples in the response/UI included:
+- The Odyssey — 2026-07-03
+- Yellow Eyes — 2026-08-18
+- Avengers: Doomsday — 2026-12-16
+
+The displayed end year is 2025, but the request includes all of 2026.

@@ -1,0 +1,12 @@
+Observed: 2026-09-01
+Request: GET https://api.themoviedb.org/3/movie/popular?page=58698&api_key=<redacted>
+Response: HTTP 400
+
+{
+  "success": false,
+  "status_code": 22,
+  "status_message": "Invalid page: Pages start at 1 and max at 500. They are expected to be an integer."
+}
+
+Browser result: The application replaced the movie results with the generic message
+"Something went wrong! Please try again later." and displayed a Retry button.

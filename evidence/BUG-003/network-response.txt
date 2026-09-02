@@ -1,0 +1,11 @@
+Observed: 2026-09-01
+
+1. On the default Popular page, selecting displayed page 58698 requested:
+   GET https://api.themoviedb.org/3/movie/popular?page=58698&api_key=<redacted>
+   Response: HTTP 400, status_code 22 (page maximum is 500)
+
+2. Without reloading, clicking the Trend top-menu link navigated to /trend but retained the invalid page state. The browser requested:
+   GET https://api.themoviedb.org/3/trending/movie/week?page=58698&api_key=<redacted>
+   Response: HTTP 400, status_code 22
+
+Browser result: /trend displayed "Something went wrong! Please try again later." instead of Trend results.

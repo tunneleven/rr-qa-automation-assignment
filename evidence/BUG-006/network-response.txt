@@ -1,0 +1,9 @@
+Observed: 2026-09-01
+Selected type: TV Shows
+Search query: Batman
+
+Requests after selecting TV Shows and entering the query:
+- GET https://api.themoviedb.org/3/tv/popular?page=1&api_key=<redacted> -> HTTP 200
+- GET https://api.themoviedb.org/3/search/movie?query=Batman&page=1&api_key=<redacted> -> HTTP 200
+
+The TV search request should use the TV search endpoint. The movie response contains fields such as title and release_date; the TV card mapper expects name and first_air_date. The rendered cards therefore show poster/genre/year but no title.

@@ -1,0 +1,15 @@
+Observed: 2026-09-01
+
+Control (valid earlier start):
+1. Set end year to 2024: visible range became 1900-2024.
+2. Set start year to 2000: visible range became 2000-2024 and a discover request was sent.
+
+Invalid-range behavior:
+1. With visible range 2000-2024, select start year 2025 (later than end).
+2. The visible range remains 2000-2024.
+3. No new API request is sent and no validation message is shown.
+
+Equal-boundary behavior:
+- With start year 2000 and end year 2024, the end-year option 2000 is available, but selecting it leaves the range unchanged and shows no validation message.
+
+Classification: the reported case "start earlier than end" was not reproduced as a failure; that valid selection worked. Silent rejection of an invalid or equal range is a low-severity UX candidate, pending product requirements.

@@ -1,0 +1,14 @@
+Observed: 2026-09-01
+Target: https://tmdb-discover.surge.sh/
+
+Direct browser navigation results:
+- GET /popular -> HTTP 404; Surge response: "page not found"
+- GET /trend -> HTTP 404; Surge response: "page not found"
+- GET /new -> HTTP 404; Surge response: "page not found"
+- GET /top -> HTTP 404; Surge response: "page not found"
+
+Control:
+- GET / -> HTTP 200 and client redirect to /popular
+- Clicking the Trend link from the loaded application navigated to /trend and rendered results.
+
+API credentials were not included in this evidence.

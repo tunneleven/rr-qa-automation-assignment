@@ -1,0 +1,7 @@
+Observed: 2026-09-01
+Filters: start year 2020; end year 2024; genre Action
+Displayed pagination: Previous, 1, 2, 3, 4, ..., 239, 240, 241, Next
+Last-page action: selected 241
+Browser result: 9 movie cards remained visible; no generic error state
+
+This control case shows that the defect is conditional: a filtered response with 241 pages can reach its displayed last page. The unfiltered response exposes 58,698 pages even though the service rejects pages above 500.

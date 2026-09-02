@@ -1,0 +1,68 @@
+Filter coverage execution: 2026-09-01
+Target: https://tmdb-discover.surge.sh/
+API keys are redacted.
+
+TYPE-001 | default Movie
+API: GET /3/movie/popular?page=1 -> 200
+UI: Movie selected; 20 cards; no application error. PASS
+
+TYPE-002 | TV Shows
+API: GET /3/tv/popular?page=1 -> 200
+UI: TV Shows selected; 20 TV cards; no application error. PASS
+
+GENRE-001 | Movie + Action
+API: GET /3/discover/movie?...&with_genres=28 -> 200; 20 cards; sample genre_ids include 28. PASS for genre constraint.
+
+GENRE-002 | Movie + Action + Comedy
+API sequence: with_genres=28 -> with_genres=28,35; both 200; selected chips Action and Comedy; 20 cards. PASS for multi-select/request.
+
+GENRE-003 | TV Shows + Drama
+API sequence: GET /3/tv/popular?page=1 -> GET /3/discover/tv?...&with_genres=18; both 200; Drama selected; 20 cards. PASS.
+
+RATING-001 | 4 stars (& up)
+API: GET /3/discover/movie?...&vote_average.gte=4&vote_average.lte=5&page=1 -> 200; sample ratings are >=4; 20 cards. PASS for request/response.
+
+RATING-002 | 5 stars (& up)
+API: GET /3/discover/movie?...&vote_average.gte=5&vote_average.lte=5&page=1 -> 200; sample ratings are 5; 20 cards. PASS for boundary.
+
+SEARCH-001 | Seventeen: 1977
+API: GET /3/search/movie?query=Seventeen%3A+1977&page=1 -> 200; total_results=1.
+UI: one matching title; poster fallback defect remains. PASS for search; BUG-004 for image.
+
+SEARCH-002 | Batman
+API: GET /3/search/movie?query=Batman&page=1 -> 200; total_results=174; total_pages=9.
+UI: 20 matching cards. PASS.
+
+SEARCH-003 | __qa_no_match_20260901__
+API: GET /3/search/movie?query=__qa_no_match_20260901__&page=1 -> 200; total_results=0.
+UI: No results found. PASS.
+
+SEARCH-004 | Spider-Man: No Way Home
+API: GET /3/search/movie?query=Spider-Man%3A+No+Way+Home&page=1 -> 200; total_results=2.
+UI: two matching cards. PASS.
+
+SEARCH-005 | TV Shows + Batman
+API sequence: GET /3/tv/popular?page=1 -> 200; GET /3/search/movie?query=Batman&page=1 -> 200.
+UI: TV Shows selected but 20 cards have no titles. FAIL; BUG-006.
+
+YEAR-001 | 2020-2024
+API sequence included an intermediate lte=2026 request, followed by final gte=2020-01-01 and lte=2024-12-31 request -> 200.
+UI: final controls 2020-2024 and final cards were in range. PARTIAL; intermediate state is covered by BUG-005.
+
+YEAR-002 | start 2025 with visible end 2025
+API: gte=2025-01-01 and lte=2026-12-31 -> 200.
+UI: controls show 2025-2025 and include 2026 cards. FAIL; BUG-005.
+
+COMBO-001 | Action + rating 4
+API sequence ended with discover/movie request containing with_genres=28 and vote_average.gte=4 -> 200; 20 cards. PASS for selected constraints.
+
+COMBO-002 | 2020-2024 + Action
+API final request contained gte=2020-01-01, lte=2024-12-31, and with_genres=28 -> 200.
+UI/API results included release years 1997 and 2010. FAIL; BUG-005.
+
+COMBO-003 | TV Shows + Drama + rating 4
+API final request contained discover/tv, with_genres=18, and vote_average.gte=4 -> 200; 20 TV cards. PASS.
+
+COMBO-004 | Action selected, then search Batman
+API sequence: discover/movie with_genres=28 -> search/movie query=Batman without genre; 200.
+UI: search results rendered and Action chip cleared. PASS, assuming search intentionally resets other filters.

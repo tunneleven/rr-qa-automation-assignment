@@ -17,7 +17,14 @@ Evaluate the reliability of filtering and pagination in the TMDB Discover demo t
 
 ### Out of scope
 
-To be confirmed after exploratory testing.
+- Correctness or availability of the upstream TMDB data/service beyond the contract exposed to the browser
+- Pixel-perfect visual comparison, performance/load testing, and a full accessibility audit
+- Exhaustive testing of every genre and filter permutation; representative pairwise combinations are used first
+- Features outside discovery, navigation, filtering, and pagination unless the requirements expand
+
+## Current phase
+
+Manual exploration and the representative coverage matrix are complete. Phases 1–6 of automation are implemented with pytest and Playwright: homepage smoke, category/type navigation, individual filters, valid filter combinations, browser request/response-to-UI consistency, normal pagination, and regression checks for the confirmed pagination, routing, media, and TV-search defects. Confirmed defects are retained as strict expected failures until fixed.
 
 ## Test levels
 
