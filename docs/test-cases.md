@@ -10,7 +10,7 @@ These cases cover the exploratory findings recorded in [`docs/defects.md`](defec
 | Popular, Trend, Newest, and Top rated navigation | [`tests/ui/test_categories.py::test_category_navigation_loads_results`](../tests/ui/test_categories.py) |
 | Movie and TV Shows type selection | [`tests/ui/test_categories.py::test_media_type_filter_loads_matching_result_fields`](../tests/ui/test_categories.py) |
 | Single, multi-select, and TV genre filters | [`tests/ui/test_filters.py`](../tests/ui/test_filters.py) |
-| Rating boundaries, title search, special-character search, and no-result search | [`tests/ui/test_filters.py`](../tests/ui/test_filters.py) |
+| Full- and half-star rating boundaries, title search, special-character search, and no-result search | [`tests/ui/test_filters.py`](../tests/ui/test_filters.py) |
 | Valid year-range and year-boundary checks | [`tests/ui/test_filters.py`](../tests/ui/test_filters.py) |
 | API request/response and UI consistency | [`tests/api/test_discover_network.py`](../tests/api/test_discover_network.py) |
 | Normal, filtered, and known-defect pagination cases | [`tests/ui/test_pagination.py`](../tests/ui/test_pagination.py) |
@@ -19,6 +19,30 @@ These cases cover the exploratory findings recorded in [`docs/defects.md`](defec
 | Known pagination, retained-page, and year regressions | Strict expected failures for [`BUG-001`](defects.md#bug-001--pagination-exposes-unsupported-page-numbers-and-enters-an-error-state), [`BUG-003`](defects.md#bug-003--category-navigation-retains-an-invalid-page-after-a-pagination-error), and [`BUG-005`](defects.md#bug-005--year-filter-displays-results-outside-the-visible-range) |
 
 ## Documented cases
+
+### `TC-RATING-001` — Rating filter supports full- and half-star boundaries
+
+| Field | Value |
+|---|---|
+| Priority | Medium |
+| Type | UI / Browser API / Boundary / Regression |
+| Preconditions | Popular movie results are loaded with default filters |
+| Test data | Full-star values `1.0`, `4.0`, and `5.0`; half-star values `3.5` and `4.5` |
+| Automation | [`test_rating_filter_renders_results_at_or_above_selected_boundary`](../tests/ui/test_filters.py) and [`test_rating_request_response_and_ui_are_consistent`](../tests/api/test_discover_network.py) |
+
+**Steps**
+
+1. Open the Popular movie listing.
+2. Select a full-star value using the right half of its star, or a half-star value using the left half of the next star.
+3. Inspect the browser request's `vote_average.gte` and `vote_average.lte` parameters.
+4. Compare the API ratings with the selected threshold and the rendered movie cards.
+5. Repeat for the parametrized full- and half-star values.
+
+**Expected result**
+
+The selected rating is sent in 0.5-star increments, the upper bound remains `5`, every returned movie meets the lower bound, and the same number and titles of API results are rendered in the UI.
+
+---
 
 ### `TC-PAGE-001` — Pagination must not offer pages unsupported by the service
 

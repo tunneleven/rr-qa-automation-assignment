@@ -46,6 +46,7 @@ Manual exploration and the representative coverage matrix are complete. Phases 1
 - Prefer accessible role, label, and text locators over implementation-specific CSS.
 - Use Playwright web-first assertions and automatic waiting; avoid fixed sleeps.
 - Keep selectors and reusable actions in page objects; keep assertions in tests.
+- For the half-star rating widget, click the intended left or right half explicitly and assert the numeric threshold sent to the API.
 - Give every test a single, observable purpose and isolated browser context.
 - Parametrize equivalent scenarios instead of duplicating test logic.
 - Log business actions and API observations, not low-value implementation noise.
@@ -57,6 +58,7 @@ Manual exploration and the representative coverage matrix are complete. Phases 1
 |---|---|
 | Shared demo environment or changing data | Assert stable invariants rather than exact volatile result counts |
 | Third-party/API instability | Capture response status and diagnostics; distinguish product failures from environment failures |
+| Headless/headed browser differences | Run both modes with the same full Chromium channel; do not use Playwright's separate headless-shell binary |
 | Weak or changing selectors | Prefer user-facing locators and centralize them in the page object |
 | Known broken routes/pages | Document defects and use `xfail(strict=True)` only after a defect is confirmed |
 

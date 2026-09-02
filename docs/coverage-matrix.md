@@ -23,7 +23,7 @@ This is the first focused coverage pass after the initial defect exploration. It
 |---|---|---|
 | Type | Movie default; TV Shows; TV genre schema | Retest after any type-state fix; all category/type combinations |
 | Genre | Movie Action; multi-select Action + Comedy; TV Drama | Every genre; explicit AND/OR product semantics for multi-select |
-| Rating | 1-star, 4-star, and 5-star boundaries | Clear/zero rating, half-star behavior, and the product's rating scale |
+| Rating | 1.0, 3.5, 4.0, 4.5, and 5.0 boundaries, including explicit half-star interactions | Clear/zero rating and broader coverage of the product's rating scale |
 | Search | Partial, no-match, special-character, and TV search; search pagination | Empty query, long input, and Unicode beyond the punctuation case |
 | Year | Valid range; visible 2025 boundary; invalid-range candidate | More boundary dates and behavior after refresh/category changes |
 | Combinations | Genre + rating; year + genre; TV + genre + rating; search after genre | Broader pairwise matrix after expected search-reset behavior is confirmed |
@@ -36,7 +36,7 @@ The following executable cases were added beyond the original defect-focused che
 | Area | Automated coverage |
 |---|---|
 | Genre | Multi-select movie genres and TV genre response fields |
-| Rating | Lower boundary (1 star), in addition to the existing 4- and 5-star cases |
+| Rating | Full- and half-star boundaries at 1.0, 3.5, 4.0, 4.5, and 5.0 |
 | Search | Punctuation/special-character query and pagination with the query retained |
 | Year | Valid two-sided range and invalid selections that must not replace a valid range |
 | Pagination | Next/previous navigation and a filtered listing's displayed last page |
@@ -54,8 +54,11 @@ The API column records the relevant request or request sequence with the API key
 | `GENRE-001` | Movie + `Action` | `GET /3/discover/movie?...&with_genres=28` returns 200; sample records include genre 28 | Action is selected; returned movies satisfy the genre constraint | Action chip selected; 20 cards rendered; sample records contained genre 28 | **PASS** |
 | `GENRE-002` | Movie + `Action` + `Comedy` | Request sequence ends with `with_genres=28,35` and returns 200 | Both selected genres remain visible; cards render | Action and Comedy chips selected; final request contained `28,35`; 20 cards rendered | **PASS** |
 | `GENRE-003` | TV Shows + `Drama` | Request sequence ends with `GET /3/discover/tv?...&with_genres=18` and returns 200 | Drama is selected; TV cards render | TV Shows and Drama selected; 20 TV cards rendered | **PASS** |
-| `RATING-001` | `4` stars (& up) | `GET /3/discover/movie?...&vote_average.gte=4&vote_average.lte=5&page=1` returns 200; sampled ratings are ≥4 | Results satisfy the lower bound | 20 cards rendered; sampled API ratings were ≥4 | **PASS** |
-| `RATING-002` | `5` stars (& up) | `GET /3/discover/movie?...&vote_average.gte=5&vote_average.lte=5&page=1` returns 200 | Results satisfy the 5-star boundary or show no results | 20 cards rendered; sampled API ratings were 5 | **PASS** |
+| `RATING-001` | `1.0` star (& up) | `GET /3/discover/movie?...&vote_average.gte=1&vote_average.lte=5&page=1` returns 200; sampled ratings are ≥1 | Results satisfy the lower bound | 20 cards rendered; sampled API ratings were ≥1 | **PASS** |
+| `RATING-002` | `3.5` stars (& up) | `GET /3/discover/movie?...&vote_average.gte=3.5&vote_average.lte=5&page=1` returns 200; the left half of the fourth star is selected | Results satisfy the half-star lower bound | 20 cards rendered; sampled API ratings were ≥3.5 | **PASS** |
+| `RATING-003` | `4.0` stars (& up) | `GET /3/discover/movie?...&vote_average.gte=4&vote_average.lte=5&page=1` returns 200; the right half of the fourth star is selected | Results satisfy the full-star lower bound | 20 cards rendered; sampled API ratings were ≥4 | **PASS** |
+| `RATING-004` | `4.5` stars (& up) | `GET /3/discover/movie?...&vote_average.gte=4.5&vote_average.lte=5&page=1` returns 200; the left half of the fifth star is selected | Results satisfy the half-star lower bound | 20 cards rendered; sampled API ratings were ≥4.5 | **PASS** |
+| `RATING-005` | `5.0` stars (& up) | `GET /3/discover/movie?...&vote_average.gte=5&vote_average.lte=5&page=1` returns 200; the right half of the fifth star is selected | Results satisfy the 5-star boundary or show no results | 20 cards rendered; sampled API ratings were 5 | **PASS** |
 | `SEARCH-001` | Exact `Seventeen: 1977` | `GET /3/search/movie?query=Seventeen%3A+1977&page=1` returns 200 with one result | The matching title renders | One matching title rendered; its missing poster triggered [`BUG-004`](defects.md#bug-004--results-without-a-poster-render-a-broken-image) | **PASS + defect** |
 | `SEARCH-002` | Partial `Batman` | `GET /3/search/movie?query=Batman&page=1` returns 200; 174 results across 9 pages in this run | Matching cards and pagination render | 20 matching cards and 9 pages rendered | **PASS** |
 | `SEARCH-003` | No match `__qa_no_match_20260901__` | Search request returns 200 with `total_results=0` | UI says `No results found.` | `No results found.` displayed; no error | **PASS** |
@@ -74,6 +77,6 @@ The API column records the relevant request or request sequence with the API key
 2. `BUG-005` affects both the visible-current-year boundary and a year + genre result set; it is not limited to one selector action.
 3. `BUG-006` was added after the TV search combination exposed a movie endpoint/TV rendering mismatch.
 4. The confirmed pagination, retained-page, direct-route, missing-poster, and TV-search findings now have strict expected-failure regression tests.
-5. Rating values are not shown on result cards, so rating verification currently relies on the browser response; the UI may need a separate requirement.
+5. Rating values are not shown on result cards, so rating verification currently relies on the browser response; full- and half-star selections are exercised through the control's left and right halves.
 6. Multi-genre AND/OR semantics and whether search intentionally clears other filters need product confirmation.
 7. The filtered last-page control case (`TC-PAGE-003`) is automated as `test_filtered_last_page_remains_usable`; exhaustive page-control states remain a follow-up item.

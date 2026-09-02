@@ -46,6 +46,7 @@ The last command installs the repository's quality checks as a local Git pre-com
 
 ```bash
 # Entire suite; console logging and HTML report are enabled by default
+# Uses the full Chromium binary in headless mode (configured in pyproject.toml)
 uv run pytest
 
 # Critical checks only
@@ -67,6 +68,7 @@ The self-contained report is generated at `artifacts/report.html`. Playwright fa
 ## Design decisions
 
 - The official Playwright pytest plugin supplies an isolated browser context and page per test.
+- The pytest defaults select the full `chromium` channel so headless and headed runs use the same Chromium network implementation; Playwright's separate headless-shell binary is not used.
 - Playwright locators and web-first assertions will be used instead of fixed sleeps.
 - Page objects centralize selectors and reusable actions; assertions remain in tests.
 - Application routes and API endpoints live in one module shared by page objects and parametrized cases.
