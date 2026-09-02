@@ -1,13 +1,24 @@
 """Pagination and retained-filter state regression scenarios."""
 
-from urllib.parse import parse_qs, urlparse
-
 import pytest
 from playwright.sync_api import expect
 
 from pages.discover_page import DiscoverPage
+from pages.endpoints import (
+    CATEGORY_BY_LABEL,
+    DISCOVER_MOVIE,
+    POPULAR_MOVIE,
+    RESULTS_PER_PAGE,
+    SEARCH_MOVIE,
+    SERVICE_MAX_PAGE,
+)
+from tests.assertions import (
+    assert_listing_response,
+    assert_query_parameters,
+    assert_results_are_rendered,
+)
 
-SERVICE_MAX_PAGE = 500
+TREND_CATEGORY = CATEGORY_BY_LABEL["Trend"]
 
 
 @pytest.mark.regression
@@ -17,26 +28,18 @@ def test_pagination_moves_to_next_and_previous_page(discover_page: DiscoverPage)
     """Users can move forward and back while results and page state stay usable."""
     discover_page.open()
     next_response = discover_page.next_page()
-    next_payload = discover_page.response_json(next_response)
+    next_payload = assert_listing_response(discover_page, next_response, POPULAR_MOVIE)
 
-    assert next_response.status == 200
-    assert discover_page.response_path(next_response) == "/3/movie/popular"
-    assert discover_page.response_query(next_response)["page"] == ["2"]
-    assert next_payload["results"]
+    assert_query_parameters(discover_page, next_response, {"page": "2"})
     assert discover_page.current_page_number() == 2
-    expect(discover_page.result_items).to_have_count(len(next_payload["results"]))
-    expect(discover_page.error_message).not_to_be_visible()
+    assert_results_are_rendered(discover_page, next_payload)
 
     previous_response = discover_page.previous_page()
-    previous_payload = discover_page.response_json(previous_response)
+    previous_payload = assert_listing_response(discover_page, previous_response, POPULAR_MOVIE)
 
-    assert previous_response.status == 200
-    assert discover_page.response_path(previous_response) == "/3/movie/popular"
-    assert discover_page.response_query(previous_response)["page"] == ["1"]
-    assert previous_payload["results"]
+    assert_query_parameters(discover_page, previous_response, {"page": "1"})
     assert discover_page.current_page_number() == 1
-    expect(discover_page.result_items).to_have_count(len(previous_payload["results"]))
-    expect(discover_page.error_message).not_to_be_visible()
+    assert_results_are_rendered(discover_page, previous_payload)
 
 
 @pytest.mark.regression
@@ -46,25 +49,17 @@ def test_search_pagination_preserves_query(discover_page: DiscoverPage) -> None:
     """Moving through search pages keeps the query and renders the next result set."""
     discover_page.open()
     search_response = discover_page.search("Batman")
-    search_payload = discover_page.response_json(search_response)
+    search_payload = assert_listing_response(discover_page, search_response, SEARCH_MOVIE)
 
-    assert search_response.status == 200
     assert search_payload["total_pages"] > 1
     assert discover_page.pagination_page_numbers()
 
-    response = discover_page.select_page(2, endpoint="/3/search/movie")
-    query = discover_page.response_query(response)
-    payload = discover_page.response_json(response)
+    response = discover_page.select_page(2, endpoint=SEARCH_MOVIE)
+    payload = assert_listing_response(discover_page, response, SEARCH_MOVIE)
 
-    assert response.status == 200
-    assert discover_page.response_path(response) == "/3/search/movie"
-    assert query["query"] == ["Batman"]
-    assert query["page"] == ["2"]
-    assert payload["results"]
+    assert_query_parameters(discover_page, response, {"query": "Batman", "page": "2"})
     assert discover_page.current_page_number() == 2
-    assert discover_page.card_titles() == [result["title"] for result in payload["results"]]
-    expect(discover_page.result_items).to_have_count(len(payload["results"]))
-    expect(discover_page.error_message).not_to_be_visible()
+    assert_results_are_rendered(discover_page, payload, title_field="title")
 
 
 @pytest.mark.regression
@@ -82,20 +77,21 @@ def test_filtered_last_page_remains_usable(discover_page: DiscoverPage) -> None:
     last_page = max(page_numbers)
     assert 1 < last_page <= SERVICE_MAX_PAGE
 
-    response = discover_page.select_page(last_page, endpoint="/3/discover/movie")
-    query = discover_page.response_query(response)
-    payload = discover_page.response_json(response)
+    response = discover_page.select_page(last_page, endpoint=DISCOVER_MOVIE)
+    payload = assert_listing_response(discover_page, response, DISCOVER_MOVIE)
 
-    assert response.status == 200
-    assert discover_page.response_path(response) == "/3/discover/movie"
-    assert query["page"] == [str(last_page)]
-    assert query["release_date.gte"] == ["2020-01-01"]
-    assert query["release_date.lte"] == ["2024-12-31"]
-    assert query["with_genres"] == ["28"]
-    assert payload["results"]
+    assert_query_parameters(
+        discover_page,
+        response,
+        {
+            "page": str(last_page),
+            "release_date.gte": "2020-01-01",
+            "release_date.lte": "2024-12-31",
+            "with_genres": "28",
+        },
+    )
     assert discover_page.current_page_number() == last_page
-    expect(discover_page.result_items).to_have_count(len(payload["results"]))
-    expect(discover_page.error_message).not_to_be_visible()
+    assert_results_are_rendered(discover_page, payload)
 
 
 @pytest.mark.regression
@@ -133,14 +129,11 @@ def test_highest_offered_page_loads_results_and_becomes_active(
     last_page = max(page_numbers)
 
     response = discover_page.select_page(last_page)
-    payload = discover_page.response_json(response)
+    payload = assert_listing_response(discover_page, response, POPULAR_MOVIE)
 
-    assert response.status == 200
-    assert discover_page.response_query(response)["page"] == [str(last_page)]
-    assert payload["results"]
-    expect(discover_page.result_items).to_have_count(len(payload["results"]))
-    expect(discover_page.error_message).not_to_be_visible()
+    assert_query_parameters(discover_page, response, {"page": str(last_page)})
     assert discover_page.current_page_number() == last_page
+    assert_results_are_rendered(discover_page, payload)
 
 
 @pytest.mark.regression
@@ -160,24 +153,16 @@ def test_category_navigation_resets_page_after_pagination_error(
     discover_page.select_page(max(page_numbers))
     expect(discover_page.error_message).to_be_visible()
 
-    category_responses: list[tuple[int, str]] = []
+    # Every trending request is recorded, because the stale page number can be
+    # sent either side of the response that renders the category.
+    with discover_page.recording_responses(TREND_CATEGORY.endpoint) as category_responses:
+        discover_page.navigate_category(TREND_CATEGORY.label)
+        discover_page.wait_for_page_request_other_than(TREND_CATEGORY.endpoint)
 
-    def record_category_response(response) -> None:
-        if DiscoverPage._is_api_response(response, "/3/trending/movie/week"):
-            category_responses.append((response.status, response.url))
-
-    discover_page.page.on("response", record_category_response)
-    try:
-        discover_page.page.get_by_role("link", name="Trend", exact=True).click()
-        discover_page.page.wait_for_load_state("networkidle", timeout=60_000)
-    finally:
-        discover_page.page.remove_listener("response", record_category_response)
-
-    assert discover_page.page.url.endswith("/trend")
+    assert discover_page.page.url.endswith(TREND_CATEGORY.route)
     assert category_responses
-    assert all(
-        status == 200 and parse_qs(urlparse(url).query)["page"] == ["1"]
-        for status, url in category_responses
-    )
-    expect(discover_page.result_items.first).to_be_visible()
+    for response in category_responses:
+        assert response.status == 200
+        assert_query_parameters(discover_page, response, {"page": "1"})
+    expect(discover_page.result_cards).to_have_count(RESULTS_PER_PAGE)
     expect(discover_page.error_message).not_to_be_visible()

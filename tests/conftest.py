@@ -6,6 +6,10 @@ import pytest
 from playwright.sync_api import Page
 
 from pages.discover_page import DiscoverPage
+from utils.structured_logging import log_action
+
+# Failures raised inside the shared helpers keep pytest's detailed assertion output.
+pytest.register_assert_rewrite("tests.assertions")
 
 LOGGER = logging.getLogger(__name__)
 
@@ -32,5 +36,5 @@ def browser_context_args(browser_context_args: dict) -> dict:
 @pytest.fixture
 def discover_page(page: Page) -> DiscoverPage:
     """Provide the application page object with a fresh browser context."""
-    LOGGER.info("Creating Discover page object")
+    log_action(LOGGER, "create_page_object", page_object="DiscoverPage")
     return DiscoverPage(page)

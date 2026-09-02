@@ -1,9 +1,19 @@
 """Media-data boundary and media-type search regressions."""
 
 import pytest
-from playwright.sync_api import Route, expect
+from playwright.sync_api import Route
 
 from pages.discover_page import DiscoverPage
+from pages.endpoints import SEARCH_MOVIE, SEARCH_TV, TV_TYPE
+from tests.assertions import (
+    assert_listing_response,
+    assert_query_parameters,
+    assert_results_are_rendered,
+)
+
+SEARCH_MOVIE_PATTERN = f"**{SEARCH_MOVIE}**"
+
+MISSING_POSTER_SEARCH_QUERY = "__qa_missing_poster_boundary__"
 
 MISSING_POSTER_SEARCH_PAYLOAD = {
     "page": 1,
@@ -65,30 +75,27 @@ def test_missing_poster_result_uses_a_user_facing_fallback(
 ) -> None:
     """Records without posters keep their content without broken images."""
     discover_page.open()
-    discover_page.page.route("**/3/search/movie**", fulfill_missing_poster_search)
+    discover_page.page.route(SEARCH_MOVIE_PATTERN, fulfill_missing_poster_search)
     try:
-        response = discover_page.search("__qa_missing_poster_boundary__")
+        response = discover_page.search(MISSING_POSTER_SEARCH_QUERY)
     finally:
-        discover_page.page.unroute("**/3/search/movie**", fulfill_missing_poster_search)
+        discover_page.page.unroute(SEARCH_MOVIE_PATTERN, fulfill_missing_poster_search)
 
-    payload = discover_page.response_json(response)
-    missing_poster_results = [
-        result for result in payload["results"] if result.get("poster_path") is None
+    payload = assert_listing_response(discover_page, response, SEARCH_MOVIE)
+    results = payload["results"]
+    missing_poster_indexes = [
+        index for index, result in enumerate(results) if result.get("poster_path") is None
     ]
 
-    assert response.status == 200
-    assert discover_page.response_path(response) == "/3/search/movie"
-    assert discover_page.response_query(response)["query"] == ["__qa_missing_poster_boundary__"]
-    assert len(missing_poster_results) >= 2
-    expect(discover_page.result_items).to_have_count(len(payload["results"]))
-    assert discover_page.card_titles() == [result["title"] for result in payload["results"]]
+    assert_query_parameters(discover_page, response, {"query": MISSING_POSTER_SEARCH_QUERY})
+    assert len(missing_poster_indexes) >= 2
+    assert_results_are_rendered(discover_page, payload, title_field="title")
 
-    for index, result in enumerate(payload["results"]):
-        if result.get("poster_path") is None:
-            poster = discover_page.result_items.nth(index).locator('img[alt="Movie Poster"]')
-            assert not poster.count() or poster.first.evaluate(
-                "image => image.complete && image.naturalWidth > 0"
-            )
+    for index in missing_poster_indexes:
+        poster = discover_page.card_poster(index)
+        assert not poster.count() or poster.first.evaluate(
+            "image => image.complete && image.naturalWidth > 0"
+        )
 
 
 @pytest.mark.regression
@@ -103,15 +110,10 @@ def test_tv_search_uses_tv_endpoint_and_renders_tv_fields(
 ) -> None:
     """TV search uses TV response fields and gives every card a title."""
     discover_page.open()
-    discover_page.select_type("TV Shows")
+    discover_page.select_type(TV_TYPE)
     response = discover_page.search("Batman")
-    payload = discover_page.response_json(response)
+    payload = assert_listing_response(discover_page, response, SEARCH_TV)
 
-    assert response.status == 200
-    assert discover_page.response_path(response) == "/3/search/tv"
-    assert discover_page.response_query(response)["query"] == ["Batman"]
-    assert payload["results"]
+    assert_query_parameters(discover_page, response, {"query": "Batman"})
+    assert_results_are_rendered(discover_page, payload, title_field="name")
     assert all(result.get("name") and result.get("first_air_date") for result in payload["results"])
-    expect(discover_page.result_items).to_have_count(len(payload["results"]))
-    assert discover_page.card_titles() == [result["name"] for result in payload["results"]]
-    assert all(discover_page.card_titles())

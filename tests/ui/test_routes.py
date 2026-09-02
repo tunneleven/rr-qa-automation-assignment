@@ -4,12 +4,10 @@ import pytest
 from playwright.sync_api import expect
 
 from pages.discover_page import DiscoverPage
+from pages.endpoints import CATEGORIES, RESULTS_PER_PAGE
 
-DIRECT_ROUTE_CASES = (
-    pytest.param("/popular", id="popular"),
-    pytest.param("/trend", id="trend"),
-    pytest.param("/new", id="newest"),
-    pytest.param("/top", id="top-rated"),
+DIRECT_ROUTE_CASES = tuple(
+    pytest.param(category.route, id=category.test_id) for category in CATEGORIES
 )
 
 
@@ -31,14 +29,15 @@ def test_category_route_supports_direct_navigation(
     assert document_response.status == 200
     discover_page.wait_for_cards()
     assert discover_page.page.url.endswith(route)
-    expect(discover_page.result_items).to_have_count(20)
+    expect(discover_page.result_cards).to_have_count(RESULTS_PER_PAGE)
     assert all(discover_page.card_titles())
     expect(discover_page.error_message).not_to_be_visible()
 
-    reload_response = discover_page.page.reload(wait_until="domcontentloaded", timeout=60_000)
+    reload_response = discover_page.reload()
+
     assert reload_response is not None
     assert reload_response.status == 200
     discover_page.wait_for_cards()
     assert discover_page.page.url.endswith(route)
-    expect(discover_page.result_items).to_have_count(20)
+    expect(discover_page.result_cards).to_have_count(RESULTS_PER_PAGE)
     expect(discover_page.error_message).not_to_be_visible()
