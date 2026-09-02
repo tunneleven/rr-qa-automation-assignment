@@ -11,6 +11,15 @@ LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="session")
+def browser_type_launch_args(browser_type_launch_args: dict) -> dict:
+    """Use Chromium networking settings that keep the external API reliable."""
+    args = list(browser_type_launch_args.get("args", []))
+    if "--disable-ipv6" not in args:
+        args.append("--disable-ipv6")
+    return {**browser_type_launch_args, "args": args}
+
+
+@pytest.fixture(scope="session")
 def browser_context_args(browser_context_args: dict) -> dict:
     """Use a consistent desktop context while preserving plugin defaults."""
     return {
