@@ -2,7 +2,7 @@
 
 Automated UI and browser-network testing for [TMDB Discover](https://tmdb-discover.surge.sh/), implemented with Python, pytest, and Playwright.
 
-> **Current phase:** phases 1–6 automation implemented. Smoke, category/type, individual-filter, combination, pagination, browser-network consistency, and confirmed-defect regression checks are in place; known defects remain strict expected failures until fixed.
+> **Current phase:** phases 1–7 complete. Smoke, category/type, individual-filter, combination, pagination, browser-network consistency, and confirmed-defect regression checks are in place; the full regression evidence is current, and known defects remain strict expected failures until fixed.
 
 ## Project structure
 
@@ -99,5 +99,5 @@ The structure and configuration follow:
 4. ~~Add request/response and UI consistency assertions.~~
 5. ~~Add pagination, direct-route, retained-page, missing-poster, and TV-search regression coverage.~~
 6. ~~Expand representative title, year, rating, genre, combination, and pagination coverage.~~
-7. Run the full regression suite and update execution evidence.
+7. ~~Run the full regression suite and update execution evidence.~~
 8. Document the proposed CI workflow and final quality assessment.
