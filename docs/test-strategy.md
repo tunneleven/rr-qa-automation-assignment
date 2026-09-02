@@ -22,9 +22,9 @@ Evaluate the reliability of filtering and pagination in the TMDB Discover demo t
 - Exhaustive testing of every genre and filter permutation; representative pairwise combinations are used first
 - Features outside discovery, navigation, filtering, and pagination unless the requirements expand
 
-## Current phase
+## Current status
 
-Manual exploration and the representative coverage matrix are complete. Phases 1–6 of automation are implemented with pytest and Playwright: homepage smoke, category/type navigation, individual filters, valid filter combinations, browser request/response-to-UI consistency, normal pagination, and regression checks for the confirmed pagination, routing, media, and TV-search defects. Confirmed defects are retained as strict expected failures until fixed.
+Manual exploration, the representative coverage matrix, and the automated suite are complete. The suite covers homepage smoke, category/type navigation, individual filters, representative combinations, browser request/response-to-UI consistency, normal pagination, and regression checks for the confirmed pagination, routing, media, and TV-search defects. A documented defect is classified as XFAIL only when its dedicated exception identifies the known signature; other failures remain ordinary failures, and a fixed defect produces a strict XPASS until reviewed.
 
 ## Test levels
 
@@ -60,7 +60,7 @@ Manual exploration and the representative coverage matrix are complete. Phases 1
 | Third-party/API instability | Capture response status and diagnostics; distinguish product failures from environment failures |
 | Headless/headed browser differences | Run both modes with the same full Chromium channel; do not use Playwright's separate headless-shell binary |
 | Weak or changing selectors | Prefer user-facing locators and centralize them in the page object |
-| Known broken routes/pages | Document defects and use `xfail(strict=True)` only after a defect is confirmed |
+| Known broken routes/pages | Use strict XFAIL with a dedicated signature exception so unrelated failures remain visible |
 
 ## Environments
 

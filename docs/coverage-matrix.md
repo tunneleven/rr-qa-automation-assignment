@@ -26,7 +26,7 @@ This is the first focused coverage pass after the initial defect exploration. It
 | Rating | 1.0, 3.5, 4.0, 4.5, and 5.0 boundaries, including explicit half-star interactions | Clear/zero rating and broader coverage of the product's rating scale |
 | Search | Partial, no-match, special-character, and TV search; search pagination | Empty query, long input, and Unicode beyond the punctuation case |
 | Year | Valid range; visible 2025 boundary; invalid-range candidate | More boundary dates and behavior after refresh/category changes |
-| Combinations | Genre + rating; year + genre; TV + genre + rating; search after genre | Broader pairwise matrix after expected search-reset behavior is confirmed |
+| Combinations | Manual observations for genre + rating, year + genre, TV + genre + rating, and search after genre; automated year + genre retention in filtered pagination | Automate the other observed combinations after search-reset and multi-genre semantics are confirmed |
 | Pagination/routing | Normal next/previous; search pagination; filtered last page; known defect cases | Retest after fixes; exhaustive page-control states and route/type combinations |
 
 ## Automation expansion
@@ -73,7 +73,7 @@ The API column records the relevant request or request sequence with the API key
 
 ## Decisions and follow-up
 
-1. The type, genre, rating, search, and representative combination cases are covered manually and by the phase 1–3 automation suite.
+1. Type, genre, rating, search, and pagination have representative automated coverage. The detailed combination rows are manual observations; automation currently retains year + genre through the filtered-pagination case.
 2. `BUG-005` affects both the visible-current-year boundary and a year + genre result set; it is not limited to one selector action.
 3. `BUG-006` was added after the TV search combination exposed a movie endpoint/TV rendering mismatch.
 4. The confirmed pagination, retained-page, direct-route, missing-poster, and TV-search findings now have strict expected-failure regression tests.

@@ -2,7 +2,7 @@
 
 These cases cover the exploratory findings recorded in [`docs/defects.md`](defects.md). The cases are written around observable behavior and browser requests so they can be automated without depending on volatile movie titles or counts. The current manual coverage and observed outcomes are summarized in [`coverage-matrix.md`](coverage-matrix.md).
 
-## Implemented automation in phases 1–6
+## Implemented automation
 
 | Coverage | Automated test |
 |---|---|
@@ -40,7 +40,7 @@ These cases cover the exploratory findings recorded in [`docs/defects.md`](defec
 
 **Expected result**
 
-The selected rating is sent in 0.5-star increments, the upper bound remains `5`, every returned movie meets the lower bound, and the same number and titles of API results are rendered in the UI.
+The selected rating is sent in 0.5-star increments and the upper bound remains `5`. Every returned movie meets the lower bound, and the same number and titles of API results are rendered in the UI. If the exact five-star boundary returns no live results, the UI shows its explicit empty state with zero cards and no application error.
 
 ---
 
