@@ -8,7 +8,6 @@ from pages.endpoints import (
     CATEGORY_BY_LABEL,
     DISCOVER_MOVIE,
     POPULAR_MOVIE,
-    RESULTS_PER_PAGE,
     SEARCH_MOVIE,
     SERVICE_MAX_PAGE,
 )
@@ -17,6 +16,7 @@ from tests.assertions import (
     assert_query_parameters,
     assert_results_are_rendered,
 )
+from tests.known_defects import KnownDefectError
 
 TREND_CATEGORY = CATEGORY_BY_LABEL["Trend"]
 
@@ -32,14 +32,14 @@ def test_pagination_moves_to_next_and_previous_page(discover_page: DiscoverPage)
 
     assert_query_parameters(discover_page, next_response, {"page": "2"})
     assert discover_page.current_page_number() == 2
-    assert_results_are_rendered(discover_page, next_payload)
+    assert_results_are_rendered(discover_page, next_payload, title_field="title")
 
     previous_response = discover_page.previous_page()
     previous_payload = assert_listing_response(discover_page, previous_response, POPULAR_MOVIE)
 
     assert_query_parameters(discover_page, previous_response, {"page": "1"})
     assert discover_page.current_page_number() == 1
-    assert_results_are_rendered(discover_page, previous_payload)
+    assert_results_are_rendered(discover_page, previous_payload, title_field="title")
 
 
 @pytest.mark.regression
@@ -91,7 +91,7 @@ def test_filtered_last_page_remains_usable(discover_page: DiscoverPage) -> None:
         },
     )
     assert discover_page.current_page_number() == last_page
-    assert_results_are_rendered(discover_page, payload)
+    assert_results_are_rendered(discover_page, payload, title_field="title")
 
 
 @pytest.mark.regression
@@ -99,6 +99,7 @@ def test_filtered_last_page_remains_usable(discover_page: DiscoverPage) -> None:
 @pytest.mark.api
 @pytest.mark.xfail(
     strict=True,
+    raises=KnownDefectError,
     reason="BUG-001: pagination exposes page numbers above the service maximum of 500",
 )
 def test_pagination_does_not_offer_pages_beyond_service_limit(
@@ -109,7 +110,9 @@ def test_pagination_does_not_offer_pages_beyond_service_limit(
     page_numbers = discover_page.pagination_page_numbers()
 
     assert page_numbers
-    assert all(1 <= page_number <= SERVICE_MAX_PAGE for page_number in page_numbers)
+    assert all(page_number >= 1 for page_number in page_numbers)
+    if any(page_number > SERVICE_MAX_PAGE for page_number in page_numbers):
+        raise KnownDefectError("BUG-001: pagination exposes a page above the service limit")
 
 
 @pytest.mark.regression
@@ -117,6 +120,7 @@ def test_pagination_does_not_offer_pages_beyond_service_limit(
 @pytest.mark.api
 @pytest.mark.xfail(
     strict=True,
+    raises=KnownDefectError,
     reason="BUG-001: selecting the displayed final page sends an unsupported page number",
 )
 def test_highest_offered_page_loads_results_and_becomes_active(
@@ -129,11 +133,18 @@ def test_highest_offered_page_loads_results_and_becomes_active(
     last_page = max(page_numbers)
 
     response = discover_page.select_page(last_page)
-    payload = assert_listing_response(discover_page, response, POPULAR_MOVIE)
 
+    assert discover_page.response_path(response) == POPULAR_MOVIE
     assert_query_parameters(discover_page, response, {"page": str(last_page)})
+    if last_page > SERVICE_MAX_PAGE and response.status == 400:
+        error_payload = discover_page.response_json(response)
+        assert error_payload.get("status_code") == 22
+        expect(discover_page.error_message).to_be_visible()
+        raise KnownDefectError("BUG-001: the highest offered page receives service error 22")
+
+    payload = assert_listing_response(discover_page, response, POPULAR_MOVIE)
     assert discover_page.current_page_number() == last_page
-    assert_results_are_rendered(discover_page, payload)
+    assert_results_are_rendered(discover_page, payload, title_field="title")
 
 
 @pytest.mark.regression
@@ -141,6 +152,7 @@ def test_highest_offered_page_loads_results_and_becomes_active(
 @pytest.mark.api
 @pytest.mark.xfail(
     strict=True,
+    raises=KnownDefectError,
     reason="BUG-003: category navigation reuses the invalid page after a pagination error",
 )
 def test_category_navigation_resets_page_after_pagination_error(
@@ -150,7 +162,11 @@ def test_category_navigation_resets_page_after_pagination_error(
     discover_page.open()
     page_numbers = discover_page.pagination_page_numbers()
     assert page_numbers
-    discover_page.select_page(max(page_numbers))
+    unsupported_page = max(page_numbers)
+    unsupported_response = discover_page.select_page(unsupported_page)
+    assert unsupported_page > SERVICE_MAX_PAGE
+    assert unsupported_response.status == 400
+    assert discover_page.response_json(unsupported_response).get("status_code") == 22
     expect(discover_page.error_message).to_be_visible()
 
     # Every trending request is recorded, because the stale page number can be
@@ -161,8 +177,51 @@ def test_category_navigation_resets_page_after_pagination_error(
 
     assert discover_page.page.url.endswith(TREND_CATEGORY.route)
     assert category_responses
+
+    successful_page_one_response = next(
+        (
+            response
+            for response in category_responses
+            if response.status == 200
+            and discover_page.response_query(response).get("page") == ["1"]
+        ),
+        None,
+    )
+    assert successful_page_one_response is not None
+    successful_payload = assert_listing_response(
+        discover_page,
+        successful_page_one_response,
+        TREND_CATEGORY.endpoint,
+    )
+    assert_query_parameters(discover_page, successful_page_one_response, {"page": "1"})
+
+    documented_stale_responses = []
+    for response in category_responses:
+        if (
+            discover_page.response_query(response).get("page") == [str(unsupported_page)]
+            and response.status == 400
+            and discover_page.response_json(response).get("status_code") == 22
+        ):
+            documented_stale_responses.append(response)
+
+    try:
+        assert_results_are_rendered(
+            discover_page,
+            successful_payload,
+            title_field="title",
+        )
+    except AssertionError as recovery_failure:
+        final_error_state = (
+            discover_page.error_message.is_visible() and discover_page.result_cards.count() == 0
+        )
+        if documented_stale_responses and final_error_state:
+            raise KnownDefectError(
+                "BUG-003: the rejected stale page request determined the final error state"
+            ) from recovery_failure
+        raise
+
+    # A stale request that loses the response race is still unexpected, but it
+    # is not the documented final-state defect and must fail as an ordinary assertion.
     for response in category_responses:
         assert response.status == 200
         assert_query_parameters(discover_page, response, {"page": "1"})
-    expect(discover_page.result_cards).to_have_count(RESULTS_PER_PAGE)
-    expect(discover_page.error_message).not_to_be_visible()

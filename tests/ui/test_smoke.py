@@ -18,7 +18,7 @@ def test_homepage_loads_default_movie_results(discover_page: DiscoverPage) -> No
     assert discover_page.page.url.endswith("/popular")
     expect(discover_page.page).to_have_title("Discover")
     assert len(payload["results"]) == RESULTS_PER_PAGE
-    assert_results_are_rendered(discover_page, payload)
+    assert_results_are_rendered(discover_page, payload, title_field="title")
 
     for category in CATEGORIES:
         category_link = discover_page.page.get_by_role("link", name=category.label, exact=True)

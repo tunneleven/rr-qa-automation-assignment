@@ -35,7 +35,7 @@ def test_category_navigation_loads_results(
 
     assert discover_page.page.url.endswith(category.route)
     assert len(payload["results"]) == RESULTS_PER_PAGE
-    assert_results_are_rendered(discover_page, payload)
+    assert_results_are_rendered(discover_page, payload, title_field="title")
 
 
 @pytest.mark.regression
@@ -56,4 +56,4 @@ def test_media_type_filter_loads_matching_result_fields(
     assert len(payload["results"]) == RESULTS_PER_PAGE
     assert all(result.get(title_field) for result in payload["results"])
     assert all(result.get(date_field) for result in payload["results"])
-    assert_results_are_rendered(discover_page, payload)
+    assert_results_are_rendered(discover_page, payload, title_field=title_field)

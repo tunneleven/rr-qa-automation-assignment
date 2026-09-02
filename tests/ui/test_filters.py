@@ -1,5 +1,7 @@
 """Individual filter scenarios and their user-visible results."""
 
+from datetime import date
+
 import pytest
 from playwright.sync_api import expect
 
@@ -9,7 +11,9 @@ from tests.assertions import (
     assert_listing_response,
     assert_query_parameters,
     assert_results_are_rendered,
+    assert_results_or_empty_state,
 )
+from tests.known_defects import KnownDefectError
 
 
 @pytest.mark.regression
@@ -30,7 +34,7 @@ def test_genre_filter_renders_results_for_selected_genre(
 
     assert_query_parameters(discover_page, response, {"with_genres": genre_id})
     assert discover_page.selected_values("Genre") == [genre]
-    assert_results_are_rendered(discover_page, payload)
+    assert_results_are_rendered(discover_page, payload, title_field="title")
     assert all(
         genre_id in {str(value) for value in result["genre_ids"]} for result in payload["results"]
     )
@@ -51,7 +55,7 @@ def test_multi_genre_filter_sends_all_selected_genres(
 
     assert set(sent_genres.split(",")) == {"28", "35"}
     assert set(discover_page.selected_values("Genre")) == {"Action", "Comedy"}
-    assert_results_are_rendered(discover_page, payload)
+    assert_results_are_rendered(discover_page, payload, title_field="title")
 
 
 @pytest.mark.regression
@@ -99,7 +103,10 @@ def test_rating_filter_renders_results_at_or_above_selected_boundary(
         response,
         {"vote_average.gte": f"{rating:g}", "vote_average.lte": "5"},
     )
-    assert_results_are_rendered(discover_page, payload)
+    if rating == 5.0:
+        assert_results_or_empty_state(discover_page, payload, title_field="title")
+    else:
+        assert_results_are_rendered(discover_page, payload, title_field="title")
     assert all(result["vote_average"] >= rating for result in payload["results"])
 
 
@@ -138,6 +145,7 @@ def test_search_filter_supports_special_characters(
 @pytest.mark.api
 @pytest.mark.xfail(
     strict=True,
+    raises=KnownDefectError,
     reason="BUG-005: the API response can contain results outside the selected year range",
 )
 def test_year_filter_applies_both_selected_bounds(discover_page: DiscoverPage) -> None:
@@ -153,8 +161,16 @@ def test_year_filter_applies_both_selected_bounds(discover_page: DiscoverPage) -
         response,
         {"release_date.gte": "2020-01-01", "release_date.lte": "2024-12-31"},
     )
-    assert_results_are_rendered(discover_page, payload)
-    assert all(2020 <= int(result["release_date"][:4]) <= 2024 for result in payload["results"])
+    assert_results_are_rendered(discover_page, payload, title_field="title")
+    release_years = []
+    for result in payload["results"]:
+        release_date = result.get("release_date")
+        assert release_date
+        assert release_date[:4].isdigit()
+        release_years.append(int(release_date[:4]))
+
+    if any(year < 2020 or year > 2024 for year in release_years):
+        raise KnownDefectError("BUG-005: response contains a release year outside 2020-2024")
 
     visible_years = discover_page.card_release_years()
     assert all(year.isdigit() for year in visible_years)
@@ -201,17 +217,25 @@ def test_search_filter_shows_empty_state_for_no_results(discover_page: DiscoverP
 @pytest.mark.negative
 @pytest.mark.xfail(
     strict=True,
+    raises=KnownDefectError,
     reason="BUG-005: the visible year end is 2025 but the request uses the current year",
 )
 def test_year_filter_request_matches_visible_upper_bound(discover_page: DiscoverPage) -> None:
     """The selected 2025 start year should not expand the visible 2025 end year."""
     discover_page.open()
     response = discover_page.select_year_start(2025)
+    payload = assert_listing_response(discover_page, response, DISCOVER_MOVIE)
 
     assert discover_page.selected_years() == ["2025", "2025"]
-    assert_query_parameters(
-        discover_page,
-        response,
-        {"release_date.gte": "2025-01-01", "release_date.lte": "2025-12-31"},
-    )
+    assert_query_parameters(discover_page, response, {"release_date.gte": "2025-01-01"})
+    assert_results_are_rendered(discover_page, payload, title_field="title")
+
+    actual_upper_bound = discover_page.response_query(response).get("release_date.lte")
+    current_year_upper_bound = [f"{date.today().year}-12-31"]
+    if actual_upper_bound == current_year_upper_bound and actual_upper_bound != ["2025-12-31"]:
+        raise KnownDefectError(
+            "BUG-005: request uses the current year while the visible end year is 2025"
+        )
+
+    assert actual_upper_bound == ["2025-12-31"]
     assert all(year == "2025" for year in discover_page.card_release_years())

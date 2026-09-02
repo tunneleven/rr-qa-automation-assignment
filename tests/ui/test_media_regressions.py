@@ -1,7 +1,7 @@
 """Media-data boundary and media-type search regressions."""
 
 import pytest
-from playwright.sync_api import Route
+from playwright.sync_api import Route, expect
 
 from pages.discover_page import DiscoverPage
 from pages.endpoints import SEARCH_MOVIE, SEARCH_TV, TV_TYPE
@@ -10,6 +10,7 @@ from tests.assertions import (
     assert_query_parameters,
     assert_results_are_rendered,
 )
+from tests.known_defects import KnownDefectError
 
 SEARCH_MOVIE_PATTERN = f"**{SEARCH_MOVIE}**"
 
@@ -68,6 +69,7 @@ def fulfill_missing_poster_search(route: Route) -> None:
 @pytest.mark.api
 @pytest.mark.xfail(
     strict=True,
+    raises=KnownDefectError,
     reason="BUG-004: a null poster path renders a broken image instead of a fallback",
 )
 def test_missing_poster_result_uses_a_user_facing_fallback(
@@ -91,10 +93,29 @@ def test_missing_poster_result_uses_a_user_facing_fallback(
     assert len(missing_poster_indexes) >= 2
     assert_results_are_rendered(discover_page, payload, title_field="title")
 
+    broken_poster_indexes = []
     for index in missing_poster_indexes:
         poster = discover_page.card_poster(index)
-        assert not poster.count() or poster.first.evaluate(
-            "image => image.complete && image.naturalWidth > 0"
+        if not poster.count():
+            continue
+
+        image = poster.first
+        raw_source = image.get_attribute("src")
+        expect(image).to_be_visible()
+        expect(image).to_have_js_property("complete", True)
+        natural_width = image.evaluate("element => element.naturalWidth")
+
+        if raw_source == "" and natural_width == 0:
+            broken_poster_indexes.append(index)
+            continue
+
+        assert raw_source, f"poster {index} rendered without a usable source"
+        assert natural_width > 0, f"poster {index} did not load its nonempty source: {raw_source}"
+
+    if broken_poster_indexes:
+        raise KnownDefectError(
+            "BUG-004: null posters rendered visible images with empty sources "
+            f"and zero natural width at indexes {broken_poster_indexes}"
         )
 
 
@@ -103,6 +124,7 @@ def test_missing_poster_result_uses_a_user_facing_fallback(
 @pytest.mark.api
 @pytest.mark.xfail(
     strict=True,
+    raises=KnownDefectError,
     reason="BUG-006: TV search calls the movie endpoint and renders movie fields in TV cards",
 )
 def test_tv_search_uses_tv_endpoint_and_renders_tv_fields(
@@ -112,8 +134,21 @@ def test_tv_search_uses_tv_endpoint_and_renders_tv_fields(
     discover_page.open()
     discover_page.select_type(TV_TYPE)
     response = discover_page.search("Batman")
-    payload = assert_listing_response(discover_page, response, SEARCH_TV)
+    payload = discover_page.response_json(response)
 
+    assert response.status == 200
+    assert discover_page.selected_value("Type") == TV_TYPE
     assert_query_parameters(discover_page, response, {"query": "Batman"})
+
+    response_path = discover_page.response_path(response)
+    if response_path == SEARCH_MOVIE:
+        assert payload["results"]
+        assert all(
+            result.get("title") and result.get("release_date") for result in payload["results"]
+        )
+        expect(discover_page.result_cards).to_have_count(len(payload["results"]))
+        raise KnownDefectError("BUG-006: TV search sent its request to the movie endpoint")
+
+    payload = assert_listing_response(discover_page, response, SEARCH_TV)
     assert_results_are_rendered(discover_page, payload, title_field="name")
     assert all(result.get("name") and result.get("first_air_date") for result in payload["results"])

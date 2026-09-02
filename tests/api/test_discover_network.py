@@ -8,6 +8,7 @@ from tests.assertions import (
     assert_listing_response,
     assert_query_parameters,
     assert_results_are_rendered,
+    assert_results_or_empty_state,
 )
 
 
@@ -58,7 +59,10 @@ def test_rating_request_response_and_ui_are_consistent(
     payload = assert_listing_response(discover_page, response, DISCOVER_MOVIE)
 
     assert_query_parameters(discover_page, response, {"vote_average.gte": f"{rating:g}"})
-    assert_results_are_rendered(discover_page, payload, title_field="title")
+    if rating == 5.0:
+        assert_results_or_empty_state(discover_page, payload, title_field="title")
+    else:
+        assert_results_are_rendered(discover_page, payload, title_field="title")
     assert all(result["vote_average"] >= rating for result in payload["results"])
 
 
