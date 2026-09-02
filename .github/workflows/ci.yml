@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+  UV_VERSION: "0.10.8"
+
+jobs:
+  quality:
+    name: Quality checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python and uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+
+      - name: Install locked dependencies
+        run: uv sync --locked
+
+      - name: Run repository quality checks
+        run: uv run pre-commit run --all-files
+
+  regression:
+    name: Chromium regression
+    needs: quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python and uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+
+      - name: Install locked dependencies
+        run: uv sync --locked
+
+      - name: Install Chromium and system dependencies
+        run: uv run playwright install --with-deps chromium
+
+      - name: Run full regression suite
+        shell: bash
+        run: |
+          set -o pipefail
+          uv run pytest -q --tb=short --junitxml=artifacts/junit.xml \
+            | tee artifacts/pytest-output.txt
+
+      - name: Add regression summary
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          {
+            echo "## Chromium regression"
+            echo
+            if [[ -f artifacts/pytest-output.txt ]]; then
+              echo '```text'
+              tail -n 25 artifacts/pytest-output.txt
+              echo '```'
+            else
+              echo "The regression command did not produce a console report."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload regression evidence
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: regression-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/report.html
+            artifacts/junit.xml
+            artifacts/pytest-output.txt
+            test-results/
+          if-no-files-found: warn
+          retention-days: 30
