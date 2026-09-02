@@ -5,6 +5,7 @@ from playwright.sync_api import expect
 
 from pages.discover_page import DiscoverPage
 from pages.endpoints import CATEGORIES, RESULTS_PER_PAGE
+from tests.known_defects import KnownDefectError
 
 DIRECT_ROUTE_CASES = tuple(
     pytest.param(category.route, id=category.test_id) for category in CATEGORIES
@@ -16,6 +17,7 @@ DIRECT_ROUTE_CASES = tuple(
 @pytest.mark.parametrize("route", DIRECT_ROUTE_CASES)
 @pytest.mark.xfail(
     strict=True,
+    raises=KnownDefectError,
     reason="BUG-002: direct category routes return the hosting provider's 404 page",
 )
 def test_category_route_supports_direct_navigation(
@@ -23,9 +25,13 @@ def test_category_route_supports_direct_navigation(
     route: str,
 ) -> None:
     """A valid category route loads the application when opened directly."""
-    document_response = discover_page.open_direct(route)
+    application_response = discover_page.page.request.get("/")
+    assert application_response.status == 200
 
+    document_response = discover_page.open_direct(route)
     assert document_response is not None
+    if document_response.status == 404:
+        raise KnownDefectError(f"BUG-002: direct navigation to {route} returned HTTP 404")
     assert document_response.status == 200
     discover_page.wait_for_cards()
     assert discover_page.page.url.endswith(route)
@@ -36,6 +42,8 @@ def test_category_route_supports_direct_navigation(
     reload_response = discover_page.reload()
 
     assert reload_response is not None
+    if reload_response.status == 404:
+        raise KnownDefectError(f"BUG-002: refreshing {route} returned HTTP 404")
     assert reload_response.status == 200
     discover_page.wait_for_cards()
     assert discover_page.page.url.endswith(route)

@@ -54,5 +54,23 @@ def assert_results_are_rendered(
     if title_field is None:
         assert all(discover_page.card_titles())
     else:
-        assert discover_page.card_titles() == [result[title_field] for result in results]
+        expected_titles = [result[title_field] for result in results]
+        for index, expected_title in enumerate(expected_titles):
+            expect(discover_page.card_title(index)).to_have_text(expected_title)
+    expect(discover_page.error_message).not_to_be_visible()
+
+
+def assert_results_or_empty_state(
+    discover_page: DiscoverPage,
+    payload: dict[str, Any],
+    *,
+    title_field: str,
+) -> None:
+    """Assert payload results render, or an empty payload renders the empty state."""
+    if payload["results"]:
+        assert_results_are_rendered(discover_page, payload, title_field=title_field)
+        return
+
+    expect(discover_page.no_results_message).to_be_visible()
+    expect(discover_page.result_cards).to_have_count(0)
     expect(discover_page.error_message).not_to_be_visible()

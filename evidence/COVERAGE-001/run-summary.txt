@@ -19,10 +19,19 @@ API sequence: with_genres=28 -> with_genres=28,35; both 200; selected chips Acti
 GENRE-003 | TV Shows + Drama
 API sequence: GET /3/tv/popular?page=1 -> GET /3/discover/tv?...&with_genres=18; both 200; Drama selected; 20 cards. PASS.
 
-RATING-001 | 4 stars (& up)
+RATING-001 | 1.0 star (& up)
+API: GET /3/discover/movie?...&vote_average.gte=1&vote_average.lte=5&page=1 -> 200; sample ratings are >=1; 20 cards. PASS for request/response.
+
+RATING-002 | 3.5 stars (& up)
+API: GET /3/discover/movie?...&vote_average.gte=3.5&vote_average.lte=5&page=1 -> 200; sample ratings are >=3.5; 20 cards. PASS for half-star boundary.
+
+RATING-003 | 4 stars (& up)
 API: GET /3/discover/movie?...&vote_average.gte=4&vote_average.lte=5&page=1 -> 200; sample ratings are >=4; 20 cards. PASS for request/response.
 
-RATING-002 | 5 stars (& up)
+RATING-004 | 4.5 stars (& up)
+API: GET /3/discover/movie?...&vote_average.gte=4.5&vote_average.lte=5&page=1 -> 200; sample ratings are >=4.5; 20 cards. PASS for half-star boundary.
+
+RATING-005 | 5 stars (& up)
 API: GET /3/discover/movie?...&vote_average.gte=5&vote_average.lte=5&page=1 -> 200; sample ratings are 5; 20 cards. PASS for boundary.
 
 SEARCH-001 | Seventeen: 1977

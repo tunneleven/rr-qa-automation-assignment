@@ -298,6 +298,10 @@ class DiscoverPage:
             raise AssertionError(f"Unexpected current-page label: {label}")
         return int(match.group(1))
 
+    def card_title(self, index: int) -> Locator:
+        """Return the title line locator for one rendered result card."""
+        return self.result_cards.nth(index).locator("p").nth(CARD_TITLE_INDEX)
+
     def card_titles(self) -> list[str]:
         """Return the title line from every rendered result card."""
         return self._card_paragraphs(CARD_TITLE_INDEX)
