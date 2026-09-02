@@ -76,29 +76,31 @@ def test_tv_genre_filter_uses_tv_endpoint_and_tv_fields(
 @pytest.mark.regression
 @pytest.mark.ui
 @pytest.mark.parametrize(
-    "stars",
+    "rating",
     [
-        pytest.param(1, id="one-star"),
-        pytest.param(4, id="four-stars"),
-        pytest.param(5, id="five-stars"),
+        pytest.param(1.0, id="one-star"),
+        pytest.param(3.5, id="three-and-a-half-stars"),
+        pytest.param(4.0, id="four-stars"),
+        pytest.param(4.5, id="four-and-a-half-stars"),
+        pytest.param(5.0, id="five-stars"),
     ],
 )
 def test_rating_filter_renders_results_at_or_above_selected_boundary(
     discover_page: DiscoverPage,
-    stars: int,
+    rating: float,
 ) -> None:
-    """Selecting a rating sends the lower bound and renders matching results."""
+    """Selecting a full or half star sends the lower bound and renders matching results."""
     discover_page.open()
-    response = discover_page.select_rating(stars)
+    response = discover_page.select_rating(rating)
     payload = assert_listing_response(discover_page, response, DISCOVER_MOVIE)
 
     assert_query_parameters(
         discover_page,
         response,
-        {"vote_average.gte": str(stars), "vote_average.lte": "5"},
+        {"vote_average.gte": f"{rating:g}", "vote_average.lte": "5"},
     )
     assert_results_are_rendered(discover_page, payload)
-    assert all(result["vote_average"] >= stars for result in payload["results"])
+    assert all(result["vote_average"] >= rating for result in payload["results"])
 
 
 @pytest.mark.regression

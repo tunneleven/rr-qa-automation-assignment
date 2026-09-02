@@ -160,20 +160,31 @@ class DiscoverPage:
         self.wait_for_result_state()
         return response
 
-    def select_rating(self, stars: int) -> Response:
-        """Select a rating boundary and return the resulting discover response."""
-        if stars not in range(1, 6):
-            raise ValueError("Rating must be between 1 and 5 stars")
+    def select_rating(self, rating: float) -> Response:
+        """Select a full- or half-star boundary and return its discover response."""
+        rating_value = float(rating)
+        valid_ratings = {step / 2 for step in range(1, 11)}
+        if rating_value not in valid_ratings:
+            raise ValueError("Rating must be between 0.5 and 5 stars in 0.5-star increments")
 
+        star_position = int(rating_value) if rating_value.is_integer() else int(rating_value) + 1
+        half = "second" if rating_value.is_integer() else "first"
         endpoint = self._discover_endpoint()
-        log_action(LOGGER, "select_rating", stars=stars)
+        log_action(LOGGER, "select_rating", rating=rating_value)
+        rating_control = self.page.locator(
+            f'ul[role="radiogroup"] [role="radio"][aria-posinset="{star_position}"]'
+        )
+        rating_control.scroll_into_view_if_needed()
+        box = rating_control.bounding_box()
+        if box is None:
+            raise AssertionError(f"Rating control {rating_value:g} is not visible")
+        x_position = box["width"] * (0.25 if half == "first" else 0.75)
+        y_position = box["height"] / 2
         with self.page.expect_response(
             lambda response: self.is_api_response(response, endpoint),
             timeout=API_TIMEOUT_MS,
         ) as response_info:
-            self.page.locator(
-                f'ul[role="radiogroup"] [role="radio"][aria-posinset="{stars}"]'
-            ).click()
+            rating_control.click(position={"x": x_position, "y": y_position})
 
         response = response_info.value
         self.wait_for_result_state()
