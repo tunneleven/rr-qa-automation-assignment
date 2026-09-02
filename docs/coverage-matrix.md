@@ -76,4 +76,4 @@ The API column records the relevant request or request sequence with the API key
 4. The confirmed pagination, retained-page, direct-route, missing-poster, and TV-search findings now have strict expected-failure regression tests.
 5. Rating values are not shown on result cards, so rating verification currently relies on the browser response; the UI may need a separate requirement.
 6. Multi-genre AND/OR semantics and whether search intentionally clears other filters need product confirmation.
-7. The filtered last-page control case (`TC-PAGE-003`) remains a separate follow-up automation item.
+7. The filtered last-page control case (`TC-PAGE-003`) is automated as `test_filtered_last_page_remains_usable`; exhaustive page-control states remain a follow-up item.

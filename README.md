@@ -8,13 +8,16 @@ Automated UI and browser-network testing for [TMDB Discover](https://tmdb-discov
 
 ```text
 .
-├── pages/                 # Page objects: locators and reusable user actions
+├── pages/
+│   ├── discover_page.py   # Page object: locators and reusable user actions
+│   └── endpoints.py       # Application routes and TMDB endpoints used everywhere
 ├── tests/
 │   ├── ui/                # User-visible functional and negative tests
 │   ├── api/               # Browser request/response assertions
+│   ├── assertions.py      # Assertion helpers shared by the UI and API suites
 │   └── conftest.py        # Shared, narrowly scoped fixtures
 ├── test_data/             # Stable input data when parametrization alone is insufficient
-├── utils/                 # Small cross-cutting helpers (for example structured logging)
+├── utils/                 # Small cross-cutting helpers (structured action logging)
 ├── docs/
 │   ├── test-strategy.md
 │   ├── test-cases.md
@@ -66,6 +69,8 @@ The self-contained report is generated at `artifacts/report.html`. Playwright fa
 - The official Playwright pytest plugin supplies an isolated browser context and page per test.
 - Playwright locators and web-first assertions will be used instead of fixed sleeps.
 - Page objects centralize selectors and reusable actions; assertions remain in tests.
+- Application routes and API endpoints live in one module shared by page objects and parametrized cases.
+- Repeated request, rendering, and query-parameter checks live in shared assertion helpers.
 - Pytest fixtures provide focused setup, markers organize execution, and parametrization removes duplication.
 - UI behavior and the browser requests that support it are asserted together where that provides stronger evidence.
 - Traces and screenshots are retained on failure; console logs and a self-contained HTML report are enabled by default.

@@ -135,12 +135,14 @@ Trend navigation resets to a valid page, normally page 1, and displays Trend res
 - The URL changes to `/trend`.
 - The browser requests `/3/trending/movie/week?page=58698`, which the service rejects with HTTP `400`.
 - The Trend view remains in the generic error state instead of loading Trend results. The same retained-page/error behavior was also observed when navigating to Newest and Top rated.
+- The category change also issues a valid `page=1` request within roughly 10 ms of the rejected one, and the two complete in either order. The rejected request still determines the final state: the error remains visible with no rendered cards.
 
 **Evidence**
 
 - [`01-category-after-pagination-error.png`](../evidence/BUG-003/01-category-after-pagination-error.png) — Trend view after the failed pagination flow
 - [`network-response.txt`](../evidence/BUG-003/network-response.txt) — redacted Trend requests and responses
 - [`menu-navigation-matrix.txt`](../evidence/BUG-003/menu-navigation-matrix.txt) — follow-up checks for Trend, Newest, and Top rated
+- [`stale-page-request-sequence.txt`](../evidence/BUG-003/stale-page-request-sequence.txt) — timed request sequence and six-attempt repeatability check
 
 **Impact**
 

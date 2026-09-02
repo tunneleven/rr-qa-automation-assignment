@@ -1,0 +1,48 @@
+BUG-003 — request sequence after a pagination error
+===================================================
+
+Target:      https://tmdb-discover.surge.sh
+Observed:    2026-09-01
+Environment: Linux x86_64; Python 3.12.3; Playwright 1.62.0; Chromium 151.0.7922.34
+Method:      Controlled Chromium session; every api.themoviedb.org response logged
+             with a relative timestamp. API credentials redacted.
+
+Sequence (single controlled session)
+------------------------------------
+
+  4.56s  RESP 200 /3/movie/popular            page=1
+  4.61s  initial cards visible
+  4.63s  selecting page 58709 (highest page offered by the UI)
+  4.92s  RESP 400 /3/movie/popular            page=58709
+  4.97s  error state visible
+  4.97s  clicking Trend
+  5.25s  RESP 400 /3/trending/movie/week      page=58709   <-- retained invalid page
+  5.26s  RESP 200 /3/trending/movie/week      page=1
+ 13.03s  url=https://tmdb-discover.surge.sh/trend
+ 13.03s  error visible=True  rendered cards=0
+
+Repeatability and ordering
+--------------------------
+
+Six controlled attempts reached the category click; the stale `page=58709`
+request was sent in all six. The two Trend requests are issued within roughly
+10 ms of each other and their completion order varies:
+
+  attempt 1  settle=0ms     trending=[(400, 58709), (200, 1)]  stale_sent=YES  error_visible=True  cards=0
+  attempt 2  settle=0ms     trending=[(200, 1), (400, 58709)]  stale_sent=YES  error_visible=True  cards=0
+  attempt 3  settle=0ms     trending=[(200, 1), (400, 58709)]  stale_sent=YES  error_visible=True  cards=0
+  attempt 4  settle=0ms     trending=[(200, 1), (400, 58709)]  stale_sent=YES  error_visible=True  cards=0
+  attempt 5  settle=3000ms  trending=[(200, 1), (400, 58709)]  stale_sent=YES  error_visible=True  cards=0
+  attempt 6  settle=3000ms  trending=[(200, 1), (400, 58709)]  stale_sent=YES  error_visible=True  cards=0
+
+Waiting three seconds after the error state appears before clicking the category
+does not change the outcome, so the defect is not a short-lived startup race.
+
+Consequence for the automated check
+-----------------------------------
+
+Because the valid `page=1` response can complete before the stale request, an
+assertion that stops observing as soon as the category renders can miss the
+defect. `test_category_navigation_resets_page_after_pagination_error` therefore
+records every Trend response and waits for a listing request asking for a page
+other than the first before asserting the settled UI state.
