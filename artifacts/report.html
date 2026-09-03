@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title id="head-title">report.html</title>
+      <style type="text/css">body {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  /* do not increase min-width as some may use split screens */
+  min-width: 800px;
+  color: #999;
+}
+
+h1 {
+  font-size: 24px;
+  color: black;
+}
+
+h2 {
+  font-size: 16px;
+  color: black;
+}
+
+p {
+  color: black;
+}
+
+a {
+  color: #999;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+/******************************
+ * SUMMARY INFORMATION
+ ******************************/
+#environment td {
+  padding: 5px;
+  border: 1px solid #e6e6e6;
+  vertical-align: top;
+}
+#environment tr:nth-child(odd) {
+  background-color: #f6f6f6;
+}
+#environment ul {
+  margin: 0;
+  padding: 0 20px;
+}
+
+/******************************
+ * TEST RESULT COLORS
+ ******************************/
+span.passed,
+.passed .col-result {
+  color: green;
+}
+
+span.skipped,
+span.xfailed,
+span.rerun,
+.skipped .col-result,
+.xfailed .col-result,
+.rerun .col-result {
+  color: orange;
+}
+
+span.error,
+span.failed,
+span.xpassed,
+.error .col-result,
+.failed .col-result,
+.xpassed .col-result {
+  color: red;
+}
+
+.col-links__extra {
+  margin-right: 3px;
+}
+
+/******************************
+ * RESULTS TABLE
+ *
+ * 1. Table Layout
+ * 2. Extra
+ * 3. Sorting items
+ *
+ ******************************/
+/*------------------
+ * 1. Table Layout
+ *------------------*/
+#results-table {
+  border: 1px solid #e6e6e6;
+  color: #999;
+  font-size: 12px;
+  width: 100%;
+}
+#results-table th,
+#results-table td {
+  padding: 5px;
+  border: 1px solid #e6e6e6;
+  text-align: left;
+}
+#results-table th {
+  font-weight: bold;
+}
+
+/*------------------
+ * 2. Extra
+ *------------------*/
+.logwrapper {
+  max-height: 230px;
+  overflow-y: scroll;
+  background-color: #e6e6e6;
+}
+.logwrapper.expanded {
+  max-height: none;
+}
+.logwrapper.expanded .logexpander:after {
+  content: "collapse [-]";
+}
+.logwrapper .logexpander {
+  z-index: 1;
+  position: sticky;
+  top: 10px;
+  width: max-content;
+  border: 1px solid;
+  border-radius: 3px;
+  padding: 5px 7px;
+  margin: 10px 0 10px calc(100% - 80px);
+  cursor: pointer;
+  background-color: #e6e6e6;
+}
+.logwrapper .logexpander:after {
+  content: "expand [+]";
+}
+.logwrapper .logexpander:hover {
+  color: #000;
+  border-color: #000;
+}
+.logwrapper .log {
+  min-height: 40px;
+  position: relative;
+  top: -50px;
+  height: calc(100% + 50px);
+  border: 1px solid #e6e6e6;
+  color: black;
+  display: block;
+  font-family: "Courier New", Courier, monospace;
+  padding: 5px;
+  padding-right: 80px;
+  white-space: pre-wrap;
+}
+
+div.media {
+  border: 1px solid #e6e6e6;
+  float: right;
+  height: 240px;
+  margin: 0 5px;
+  overflow: hidden;
+  width: 320px;
+}
+
+.media-container {
+  display: grid;
+  grid-template-columns: 25px auto 25px;
+  align-items: center;
+  flex: 1 1;
+  overflow: hidden;
+  height: 200px;
+}
+
+.media-container--fullscreen {
+  grid-template-columns: 0px auto 0px;
+}
+
+.media-container__nav--right,
+.media-container__nav--left {
+  text-align: center;
+  cursor: pointer;
+}
+
+.media-container__viewport {
+  cursor: pointer;
+  text-align: center;
+  height: inherit;
+}
+.media-container__viewport img,
+.media-container__viewport video {
+  object-fit: cover;
+  width: 100%;
+  max-height: 100%;
+}
+
+.media__name,
+.media__counter {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  flex: 0 0 25px;
+  align-items: center;
+}
+
+.collapsible td:not(.col-links) {
+  cursor: pointer;
+}
+.collapsible td:not(.col-links):hover::after {
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+}
+
+.col-result {
+  width: 130px;
+}
+.col-result:hover::after {
+  content: " (hide details)";
+}
+
+.col-result.collapsed:hover::after {
+  content: " (show details)";
+}
+
+#environment-header h2:hover::after {
+  content: " (hide details)";
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+#environment-header.collapsed h2:hover::after {
+  content: " (show details)";
+  color: #bbb;
+  font-style: italic;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/*------------------
+ * 3. Sorting items
+ *------------------*/
+.sortable {
+  cursor: pointer;
+}
+.sortable.desc:after {
+  content: " ";
+  position: relative;
+  left: 5px;
+  bottom: -12.5px;
+  border: 10px solid #4caf50;
+  border-bottom: 0;
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+.sortable.asc:after {
+  content: " ";
+  position: relative;
+  left: 5px;
+  bottom: 12.5px;
+  border: 10px solid #4caf50;
+  border-top: 0;
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+
+.hidden, .summary__reload__button.hidden {
+  display: none;
+}
+
+.summary__data {
+  flex: 0 0 550px;
+}
+.summary__reload {
+  flex: 1 1;
+  display: flex;
+  justify-content: center;
+}
+.summary__reload__button {
+  flex: 0 0 300px;
+  display: flex;
+  color: white;
+  font-weight: bold;
+  background-color: #4caf50;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.summary__reload__button:hover {
+  background-color: #46a049;
+}
+.summary__spacer {
+  flex: 0 0 550px;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+}
+
+.filters,
+.collapse {
+  display: flex;
+  align-items: center;
+}
+.filters button,
+.collapse button {
+  color: #999;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.filters button:hover,
+.collapse button:hover {
+  color: #ccc;
+}
+
+.filter__label {
+  margin-right: 10px;
+}
+
+      </style>
+
+  </head>
+  <body>
+    <h1 id="title">report.html</h1>
+    <p>Report generated on 03-Sep-2026 at 09:32:17 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a>
+        v4.2.0</p>
+    <div id="environment-header">
+      <h2>Environment</h2>
+    </div>
+    <table id="environment"></table>
+    <!-- TEMPLATES -->
+      <template id="template_environment_row">
+      <tr>
+        <td></td>
+        <td></td>
+      </tr>
+    </template>
+    <template id="template_results-table__body--empty">
+      <tbody class="results-table-row">
+        <tr id="not-found-message">
+          <td colspan="4">No results found. Check the filters.</td>
+        </tr>
+      </tbody>
+    </template>
+    <template id="template_results-table__tbody">
+      <tbody class="results-table-row">
+        <tr class="collapsible">
+        </tr>
+        <tr class="extras-row">
+          <td class="extra" colspan="4">
+            <div class="extraHTML"></div>
+            <div class="media">
+              <div class="media-container">
+                  <div class="media-container__nav--left">&lt;</div>
+                  <div class="media-container__viewport">
+                    <img src="" />
+                    <video controls>
+                      <source src="" type="video/mp4">
+                    </video>
+                  </div>
+                  <div class="media-container__nav--right">&gt;</div>
+                </div>
+                <div class="media__name"></div>
+                <div class="media__counter"></div>
+            </div>
+            <div class="logwrapper">
+              <div class="logexpander"></div>
+              <div class="log"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </template>
+    <!-- END TEMPLATES -->
+    <div class="summary">
+      <div class="summary__data">
+        <h2>Summary</h2>
+        <div class="additional-summary prefix">
+        </div>
+        <p class="run-count">41 tests took 00:02:36.</p>
+        <p class="filter">(Un)check the boxes to filter the results.</p>
+        <div class="summary__reload">
+          <div class="summary__reload__button hidden" onclick="location.reload()">
+            <div>There are still tests running. <br />Reload this page to get the latest results!</div>
+          </div>
+        </div>
+        <div class="summary__spacer"></div>
+        <div class="controls">
+          <div class="filters">
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="failed" disabled>
+            <span class="failed">0 Failed,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="passed" >
+            <span class="passed">30 Passed,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="skipped" disabled>
+            <span class="skipped">0 Skipped,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xfailed" >
+            <span class="xfailed">11 Expected failures,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xpassed" disabled>
+            <span class="xpassed">0 Unexpected passes,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="error" disabled>
+            <span class="error">0 Errors,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="rerun" disabled>
+            <span class="rerun">0 Reruns</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="retried" disabled>
+            <span class="retried">0 Retried,</span>
+          </div>
+          <div class="collapse">
+            <button id="show_all_details">Show all details</button>&nbsp;/&nbsp;<button id="hide_all_details">Hide all details</button>
+          </div>
+        </div>
+      </div>
+      <div class="additional-summary summary">
+      </div>
+      <div class="additional-summary postfix">
+      </div>
+    </div>
+    <table id="results-table">
+      <thead id="results-table-head">
+        <tr>
+          <th class="sortable" data-column-type="result">Result</th>
+          <th class="sortable" data-column-type="testId">Test</th>
+          <th class="sortable" data-column-type="duration">Duration</th>
+          <th>Links</th>
+        </tr>
+      </thead>
+    </table>
+  <footer>
+    <div id="data-container" data-jsonblob="{&#34;environment&#34;: {&#34;Python&#34;: &#34;3.12.3&#34;, &#34;Platform&#34;: &#34;Linux-7.0.0-30-generic-x86_64-with-glibc2.39&#34;, &#34;Packages&#34;: {&#34;pytest&#34;: &#34;8.4.2&#34;, &#34;pluggy&#34;: &#34;1.6.0&#34;}, &#34;Plugins&#34;: {&#34;html&#34;: &#34;4.2.0&#34;, &#34;metadata&#34;: &#34;3.1.1&#34;, &#34;base-url&#34;: &#34;2.1.0&#34;, &#34;playwright&#34;: &#34;0.9.0&#34;}, &#34;Base URL&#34;: &#34;https://tmdb-discover.surge.sh&#34;}, &#34;tests&#34;: {&#34;tests/api/test_discover_network.py::test_popular_response_is_rendered_as_movie_cards[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/api/test_discover_network.py::test_popular_response_is_rendered_as_movie_cards[chromium]&#34;, &#34;duration&#34;: &#34;00:00:05&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/api/test_discover_network.py::test_popular_response_is_rendered_as_movie_cards[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:05&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\n\n&#34;}], &#34;tests/api/test_discover_network.py::test_genre_request_response_and_ui_are_consistent[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/api/test_discover_network.py::test_genre_request_response_and_ui_are_consistent[chromium]&#34;, &#34;duration&#34;: &#34;00:00:03&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/api/test_discover_network.py::test_genre_request_response_and_ui_are_consistent[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:03&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_genre genre=Action\n\n&#34;}], &#34;tests/api/test_discover_network.py::test_rating_request_response_and_ui_are_consistent[chromium-one-star]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/api/test_discover_network.py::test_rating_request_response_and_ui_are_consistent[chromium-one-star]&#34;, &#34;duration&#34;: &#34;00:00:04&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/api/test_discover_network.py::test_rating_request_response_and_ui_are_consistent[chromium-one-star]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:04&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_rating rating=1.0\n\n&#34;}], &#34;tests/api/test_discover_network.py::test_search_request_response_and_ui_are_consistent[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/api/test_discover_network.py::test_search_request_response_and_ui_are_consistent[chromium]&#34;, &#34;duration&#34;: &#34;00:00:05&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/api/test_discover_network.py::test_search_request_response_and_ui_are_consistent[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:05&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=search query=Batman\n\n&#34;}], &#34;tests/ui/test_categories.py::test_category_navigation_loads_results[chromium-popular]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/ui/test_categories.py::test_category_navigation_loads_results[chromium-popular]&#34;, &#34;duration&#34;: &#34;00:00:03&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_categories.py::test_category_navigation_loads_results[chromium-popular]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:03&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=navigate_category category=Trend\nINFO     pages.discover_page:structured_logging.py:20 action=navigate_category category=Popular\n\n&#34;}], &#34;tests/ui/test_categories.py::test_media_type_filter_loads_matching_result_fields[chromium-movie]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/ui/test_categories.py::test_media_type_filter_loads_matching_result_fields[chromium-movie]&#34;, &#34;duration&#34;: &#34;00:00:04&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_categories.py::test_media_type_filter_loads_matching_result_fields[chromium-movie]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:04&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_type type=TV Shows\nINFO     pages.discover_page:structured_logging.py:20 action=select_type type=Movie\n\n&#34;}], &#34;tests/ui/test_filters.py::test_genre_filter_renders_results_for_selected_genre[chromium-action]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/ui/test_filters.py::test_genre_filter_renders_results_for_selected_genre[chromium-action]&#34;, &#34;duration&#34;: &#34;00:00:03&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_filters.py::test_genre_filter_renders_results_for_selected_genre[chromium-action]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:03&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_genre genre=Action\n\n&#34;}], &#34;tests/ui/test_filters.py::test_multi_genre_filter_sends_all_selected_genres[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/ui/test_filters.py::test_multi_genre_filter_sends_all_selected_genres[chromium]&#34;, &#34;duration&#34;: &#34;00:00:04&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_filters.py::test_multi_genre_filter_sends_all_selected_genres[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:04&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_genre genre=Action\nINFO     pages.discover_page:structured_logging.py:20 action=select_genre genre=Comedy\n\n&#34;}], &#34;tests/ui/test_filters.py::test_tv_genre_filter_uses_tv_endpoint_and_tv_fields[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/ui/test_filters.py::test_tv_genre_filter_uses_tv_endpoint_and_tv_fields[chromium]&#34;, &#34;duration&#34;: &#34;00:00:04&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_filters.py::test_tv_genre_filter_uses_tv_endpoint_and_tv_fields[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:04&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_type type=TV Shows\nINFO     pages.discover_page:structured_logging.py:20 action=select_genre genre=Drama\n\n&#34;}], &#34;tests/ui/test_filters.py::test_rating_filter_renders_results_at_or_above_selected_boundary[chromium-one-star]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/ui/test_filters.py::test_rating_filter_renders_results_at_or_above_selected_boundary[chromium-one-star]&#34;, &#34;duration&#34;: &#34;00:00:03&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_filters.py::test_rating_filter_renders_results_at_or_above_selected_boundary[chromium-one-star]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:03&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_rating rating=1.0\n\n&#34;}], &#34;tests/ui/test_filters.py::test_search_filter_renders_matching_movie_titles[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/ui/test_filters.py::test_search_filter_renders_matching_movie_titles[chromium]&#34;, &#34;duration&#34;: &#34;00:00:06&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_filters.py::test_search_filter_renders_matching_movie_titles[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:06&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=search query=Batman\n\n&#34;}], &#34;tests/ui/test_filters.py::test_search_filter_supports_special_characters[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/ui/test_filters.py::test_search_filter_supports_special_characters[chromium]&#34;, &#34;duration&#34;: &#34;00:00:05&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_filters.py::test_search_filter_supports_special_characters[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:05&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=search query=Spider-Man: No Way Home\n\n&#34;}], &#34;tests/ui/test_filters.py::test_year_filter_applies_both_selected_bounds[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;XFailed&#34;, &#34;testId&#34;: &#34;tests/ui/test_filters.py::test_year_filter_applies_both_selected_bounds[chromium]&#34;, &#34;duration&#34;: &#34;00:00:05&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;XFailed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_filters.py::test_year_filter_applies_both_selected_bounds[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:05&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;discover_page = &amp;lt;pages.discover_page.DiscoverPage object at 0x75b0a036ffe0&amp;gt;\n\n    @pytest.mark.regression\n    @pytest.mark.ui\n    @pytest.mark.api\n    @pytest.mark.xfail(\n        strict=True,\n        raises=KnownDefectError,\n        reason=&amp;quot;BUG-005: the API response can contain results outside the selected year range&amp;quot;,\n    )\n    def test_year_filter_applies_both_selected_bounds(discover_page: DiscoverPage) -&amp;gt; None:\n        &amp;quot;&amp;quot;&amp;quot;A valid year range is reflected in the request and every visible result.&amp;quot;&amp;quot;&amp;quot;\n        discover_page.open()\n        discover_page.select_year_start(2020)\n        response = discover_page.select_year_end(2024)\n        payload = assert_listing_response(discover_page, response, DISCOVER_MOVIE)\n    \n        assert discover_page.selected_years() == [&amp;quot;2020&amp;quot;, &amp;quot;2024&amp;quot;]\n        assert_query_parameters(\n            discover_page,\n            response,\n            {&amp;quot;release_date.gte&amp;quot;: &amp;quot;2020-01-01&amp;quot;, &amp;quot;release_date.lte&amp;quot;: &amp;quot;2024-12-31&amp;quot;},\n        )\n        assert_results_are_rendered(discover_page, payload, title_field=&amp;quot;title&amp;quot;)\n        release_years = []\n        for result in payload[&amp;quot;results&amp;quot;]:\n            release_date = result.get(&amp;quot;release_date&amp;quot;)\n            assert release_date\n            assert release_date[:4].isdigit()\n            release_years.append(int(release_date[:4]))\n    \n        if any(year &amp;lt; 2020 or year &amp;gt; 2024 for year in release_years):\n&amp;gt;           raise KnownDefectError(&amp;quot;BUG-005: response contains a release year outside 2020-2024&amp;quot;)\nE           tests.known_defects.KnownDefectError: BUG-005: response contains a release year outside 2020-2024\n\ntests/ui/test_filters.py:173: KnownDefectError\n\n------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_year boundary=start year=2020\nINFO     pages.discover_page:structured_logging.py:20 action=select_year boundary=end year=2024\n\n&#34;}], &#34;tests/ui/test_filters.py::test_year_filter_rejects_invalid_range_without_changing_selection[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/ui/test_filters.py::test_year_filter_rejects_invalid_range_without_changing_selection[chromium]&#34;, &#34;duration&#34;: &#34;00:00:05&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_filters.py::test_year_filter_rejects_invalid_range_without_changing_selection[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:05&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_year boundary=start year=2020\nINFO     pages.discover_page:structured_logging.py:20 action=select_year boundary=end year=2024\nINFO     pages.discover_page:structured_logging.py:20 action=try_select_year year=2025 position=0\nINFO     pages.discover_page:structured_logging.py:20 action=try_select_year year=2019 position=1\n\n&#34;}], &#34;tests/ui/test_filters.py::test_search_filter_shows_empty_state_for_no_results[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/ui/test_filters.py::test_search_filter_shows_empty_state_for_no_results[chromium]&#34;, &#34;duration&#34;: &#34;00:00:05&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_filters.py::test_search_filter_shows_empty_state_for_no_results[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:05&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=search query=__qa_no_match_20260901__\n\n&#34;}], &#34;tests/ui/test_filters.py::test_year_filter_request_matches_visible_upper_bound[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;XFailed&#34;, &#34;testId&#34;: &#34;tests/ui/test_filters.py::test_year_filter_request_matches_visible_upper_bound[chromium]&#34;, &#34;duration&#34;: &#34;00:00:04&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;XFailed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_filters.py::test_year_filter_request_matches_visible_upper_bound[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:04&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;discover_page = &amp;lt;pages.discover_page.DiscoverPage object at 0x75b0a03f89b0&amp;gt;\n\n    @pytest.mark.regression\n    @pytest.mark.ui\n    @pytest.mark.negative\n    @pytest.mark.xfail(\n        strict=True,\n        raises=KnownDefectError,\n        reason=&amp;quot;BUG-005: the visible year end is 2025 but the request uses the current year&amp;quot;,\n    )\n    def test_year_filter_request_matches_visible_upper_bound(discover_page: DiscoverPage) -&amp;gt; None:\n        &amp;quot;&amp;quot;&amp;quot;The selected 2025 start year should not expand the visible 2025 end year.&amp;quot;&amp;quot;&amp;quot;\n        discover_page.open()\n        response = discover_page.select_year_start(2025)\n        payload = assert_listing_response(discover_page, response, DISCOVER_MOVIE)\n    \n        assert discover_page.selected_years() == [&amp;quot;2025&amp;quot;, &amp;quot;2025&amp;quot;]\n        assert_query_parameters(discover_page, response, {&amp;quot;release_date.gte&amp;quot;: &amp;quot;2025-01-01&amp;quot;})\n        assert_results_are_rendered(discover_page, payload, title_field=&amp;quot;title&amp;quot;)\n    \n        actual_upper_bound = discover_page.response_query(response).get(&amp;quot;release_date.lte&amp;quot;)\n        current_year_upper_bound = [f&amp;quot;{date.today().year}-12-31&amp;quot;]\n        if actual_upper_bound == current_year_upper_bound and actual_upper_bound != [&amp;quot;2025-12-31&amp;quot;]:\n&amp;gt;           raise KnownDefectError(\n                &amp;quot;BUG-005: request uses the current year while the visible end year is 2025&amp;quot;\n            )\nE           tests.known_defects.KnownDefectError: BUG-005: request uses the current year while the visible end year is 2025\n\ntests/ui/test_filters.py:236: KnownDefectError\n\n------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_year boundary=start year=2025\n\n&#34;}], &#34;tests/ui/test_media_regressions.py::test_missing_poster_result_uses_a_user_facing_fallback[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;XFailed&#34;, &#34;testId&#34;: &#34;tests/ui/test_media_regressions.py::test_missing_poster_result_uses_a_user_facing_fallback[chromium]&#34;, &#34;duration&#34;: &#34;00:00:04&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;XFailed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_media_regressions.py::test_missing_poster_result_uses_a_user_facing_fallback[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:04&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;discover_page = &amp;lt;pages.discover_page.DiscoverPage object at 0x75b0a02f6c00&amp;gt;\n\n    @pytest.mark.regression\n    @pytest.mark.ui\n    @pytest.mark.api\n    @pytest.mark.xfail(\n        strict=True,\n        raises=KnownDefectError,\n        reason=&amp;quot;BUG-004: a null poster path renders a broken image instead of a fallback&amp;quot;,\n    )\n    def test_missing_poster_result_uses_a_user_facing_fallback(\n        discover_page: DiscoverPage,\n    ) -&amp;gt; None:\n        &amp;quot;&amp;quot;&amp;quot;Records without posters keep their content without broken images.&amp;quot;&amp;quot;&amp;quot;\n        discover_page.open()\n        discover_page.page.route(SEARCH_MOVIE_PATTERN, fulfill_missing_poster_search)\n        try:\n            response = discover_page.search(MISSING_POSTER_SEARCH_QUERY)\n        finally:\n            discover_page.page.unroute(SEARCH_MOVIE_PATTERN, fulfill_missing_poster_search)\n    \n        payload = assert_listing_response(discover_page, response, SEARCH_MOVIE)\n        results = payload[&amp;quot;results&amp;quot;]\n        missing_poster_indexes = [\n            index for index, result in enumerate(results) if result.get(&amp;quot;poster_path&amp;quot;) is None\n        ]\n    \n        assert_query_parameters(discover_page, response, {&amp;quot;query&amp;quot;: MISSING_POSTER_SEARCH_QUERY})\n        assert len(missing_poster_indexes) &amp;gt;= 2\n        assert_results_are_rendered(discover_page, payload, title_field=&amp;quot;title&amp;quot;)\n    \n        broken_poster_indexes = []\n        for index in missing_poster_indexes:\n            poster = discover_page.card_poster(index)\n            if not poster.count():\n                continue\n    \n            image = poster.first\n            raw_source = image.get_attribute(&amp;quot;src&amp;quot;)\n            expect(image).to_be_visible()\n            expect(image).to_have_js_property(&amp;quot;complete&amp;quot;, True)\n            natural_width = image.evaluate(&amp;quot;element =&amp;gt; element.naturalWidth&amp;quot;)\n    \n            if raw_source == &amp;quot;&amp;quot; and natural_width == 0:\n                broken_poster_indexes.append(index)\n                continue\n    \n            assert raw_source, f&amp;quot;poster {index} rendered without a usable source&amp;quot;\n            assert natural_width &amp;gt; 0, f&amp;quot;poster {index} did not load its nonempty source: {raw_source}&amp;quot;\n    \n        if broken_poster_indexes:\n&amp;gt;           raise KnownDefectError(\n                &amp;quot;BUG-004: null posters rendered visible images with empty sources &amp;quot;\n                f&amp;quot;and zero natural width at indexes {broken_poster_indexes}&amp;quot;\n            )\nE           tests.known_defects.KnownDefectError: BUG-004: null posters rendered visible images with empty sources and zero natural width at indexes [0, 1]\n\ntests/ui/test_media_regressions.py:116: KnownDefectError\n\n------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=search query=__qa_missing_poster_boundary__\n\n&#34;}], &#34;tests/ui/test_media_regressions.py::test_tv_search_uses_tv_endpoint_and_renders_tv_fields[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;XFailed&#34;, &#34;testId&#34;: &#34;tests/ui/test_media_regressions.py::test_tv_search_uses_tv_endpoint_and_renders_tv_fields[chromium]&#34;, &#34;duration&#34;: &#34;00:00:05&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;XFailed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_media_regressions.py::test_tv_search_uses_tv_endpoint_and_renders_tv_fields[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:05&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;discover_page = &amp;lt;pages.discover_page.DiscoverPage object at 0x75b0a04932f0&amp;gt;\n\n    @pytest.mark.regression\n    @pytest.mark.ui\n    @pytest.mark.api\n    @pytest.mark.xfail(\n        strict=True,\n        raises=KnownDefectError,\n        reason=&amp;quot;BUG-006: TV search calls the movie endpoint and renders movie fields in TV cards&amp;quot;,\n    )\n    def test_tv_search_uses_tv_endpoint_and_renders_tv_fields(\n        discover_page: DiscoverPage,\n    ) -&amp;gt; None:\n        &amp;quot;&amp;quot;&amp;quot;TV search uses TV response fields and gives every card a title.&amp;quot;&amp;quot;&amp;quot;\n        discover_page.open()\n        discover_page.select_type(TV_TYPE)\n        response = discover_page.search(&amp;quot;Batman&amp;quot;)\n        payload = discover_page.response_json(response)\n    \n        assert response.status == 200\n        assert discover_page.selected_value(&amp;quot;Type&amp;quot;) == TV_TYPE\n        assert_query_parameters(discover_page, response, {&amp;quot;query&amp;quot;: &amp;quot;Batman&amp;quot;})\n    \n        response_path = discover_page.response_path(response)\n        if response_path == SEARCH_MOVIE:\n            assert payload[&amp;quot;results&amp;quot;]\n            assert all(\n                result.get(&amp;quot;title&amp;quot;) and result.get(&amp;quot;release_date&amp;quot;) for result in payload[&amp;quot;results&amp;quot;]\n            )\n            expect(discover_page.result_cards).to_have_count(len(payload[&amp;quot;results&amp;quot;]))\n&amp;gt;           raise KnownDefectError(&amp;quot;BUG-006: TV search sent its request to the movie endpoint&amp;quot;)\nE           tests.known_defects.KnownDefectError: BUG-006: TV search sent its request to the movie endpoint\n\ntests/ui/test_media_regressions.py:150: KnownDefectError\n\n------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_type type=TV Shows\nINFO     pages.discover_page:structured_logging.py:20 action=search query=Batman\n\n&#34;}], &#34;tests/ui/test_pagination.py::test_pagination_moves_to_next_and_previous_page[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/ui/test_pagination.py::test_pagination_moves_to_next_and_previous_page[chromium]&#34;, &#34;duration&#34;: &#34;00:00:04&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_pagination.py::test_pagination_moves_to_next_and_previous_page[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:04&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_pagination_control control=Next page endpoint=/3/movie/popular\nINFO     pages.discover_page:structured_logging.py:20 action=select_pagination_control control=Previous page endpoint=/3/movie/popular\n\n&#34;}], &#34;tests/ui/test_pagination.py::test_search_pagination_preserves_query[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/ui/test_pagination.py::test_search_pagination_preserves_query[chromium]&#34;, &#34;duration&#34;: &#34;00:00:06&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_pagination.py::test_search_pagination_preserves_query[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:06&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=search query=Batman\nINFO     pages.discover_page:structured_logging.py:20 action=select_page page=2 endpoint=/3/search/movie\n\n&#34;}], &#34;tests/ui/test_pagination.py::test_filtered_last_page_remains_usable[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/ui/test_pagination.py::test_filtered_last_page_remains_usable[chromium]&#34;, &#34;duration&#34;: &#34;00:00:05&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_pagination.py::test_filtered_last_page_remains_usable[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:05&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_year boundary=start year=2020\nINFO     pages.discover_page:structured_logging.py:20 action=select_year boundary=end year=2024\nINFO     pages.discover_page:structured_logging.py:20 action=select_genre genre=Action\nINFO     pages.discover_page:structured_logging.py:20 action=select_page page=241 endpoint=/3/discover/movie\n\n&#34;}], &#34;tests/ui/test_pagination.py::test_pagination_does_not_offer_pages_beyond_service_limit[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;XFailed&#34;, &#34;testId&#34;: &#34;tests/ui/test_pagination.py::test_pagination_does_not_offer_pages_beyond_service_limit[chromium]&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;XFailed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_pagination.py::test_pagination_does_not_offer_pages_beyond_service_limit[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;discover_page = &amp;lt;pages.discover_page.DiscoverPage object at 0x75b0a02263c0&amp;gt;\n\n    @pytest.mark.regression\n    @pytest.mark.ui\n    @pytest.mark.api\n    @pytest.mark.xfail(\n        strict=True,\n        raises=KnownDefectError,\n        reason=&amp;quot;BUG-001: pagination exposes page numbers above the service maximum of 500&amp;quot;,\n    )\n    def test_pagination_does_not_offer_pages_beyond_service_limit(\n        discover_page: DiscoverPage,\n    ) -&amp;gt; None:\n        &amp;quot;&amp;quot;&amp;quot;Every numeric page exposed by the UI is supported by the listing service.&amp;quot;&amp;quot;&amp;quot;\n        discover_page.open()\n        page_numbers = discover_page.pagination_page_numbers()\n    \n        assert page_numbers\n        assert all(page_number &amp;gt;= 1 for page_number in page_numbers)\n        if any(page_number &amp;gt; SERVICE_MAX_PAGE for page_number in page_numbers):\n&amp;gt;           raise KnownDefectError(&amp;quot;BUG-001: pagination exposes a page above the service limit&amp;quot;)\nE           tests.known_defects.KnownDefectError: BUG-001: pagination exposes a page above the service limit\n\ntests/ui/test_pagination.py:115: KnownDefectError\n\n------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\n\n&#34;}], &#34;tests/ui/test_pagination.py::test_highest_offered_page_loads_results_and_becomes_active[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;XFailed&#34;, &#34;testId&#34;: &#34;tests/ui/test_pagination.py::test_highest_offered_page_loads_results_and_becomes_active[chromium]&#34;, &#34;duration&#34;: &#34;00:00:03&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;XFailed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_pagination.py::test_highest_offered_page_loads_results_and_becomes_active[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:03&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;discover_page = &amp;lt;pages.discover_page.DiscoverPage object at 0x75b0a045be90&amp;gt;\n\n    @pytest.mark.regression\n    @pytest.mark.ui\n    @pytest.mark.api\n    @pytest.mark.xfail(\n        strict=True,\n        raises=KnownDefectError,\n        reason=&amp;quot;BUG-001: selecting the displayed final page sends an unsupported page number&amp;quot;,\n    )\n    def test_highest_offered_page_loads_results_and_becomes_active(\n        discover_page: DiscoverPage,\n    ) -&amp;gt; None:\n        &amp;quot;&amp;quot;&amp;quot;Selecting the highest offered page succeeds and keeps results visible.&amp;quot;&amp;quot;&amp;quot;\n        discover_page.open()\n        page_numbers = discover_page.pagination_page_numbers()\n        assert page_numbers\n        last_page = max(page_numbers)\n    \n        response = discover_page.select_page(last_page)\n    \n        assert discover_page.response_path(response) == POPULAR_MOVIE\n        assert_query_parameters(discover_page, response, {&amp;quot;page&amp;quot;: str(last_page)})\n        if last_page &amp;gt; SERVICE_MAX_PAGE and response.status == 400:\n            error_payload = discover_page.response_json(response)\n            assert error_payload.get(&amp;quot;status_code&amp;quot;) == 22\n            expect(discover_page.error_message).to_be_visible()\n&amp;gt;           raise KnownDefectError(&amp;quot;BUG-001: the highest offered page receives service error 22&amp;quot;)\nE           tests.known_defects.KnownDefectError: BUG-001: the highest offered page receives service error 22\n\ntests/ui/test_pagination.py:143: KnownDefectError\n\n------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_page page=58739 endpoint=/3/movie/popular\n\n&#34;}], &#34;tests/ui/test_pagination.py::test_category_navigation_resets_page_after_pagination_error[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;XFailed&#34;, &#34;testId&#34;: &#34;tests/ui/test_pagination.py::test_category_navigation_resets_page_after_pagination_error[chromium]&#34;, &#34;duration&#34;: &#34;00:00:09&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;XFailed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_pagination.py::test_category_navigation_resets_page_after_pagination_error[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:09&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;discover_page = &amp;lt;pages.discover_page.DiscoverPage object at 0x75b0a0426240&amp;gt;\n\n    @pytest.mark.regression\n    @pytest.mark.ui\n    @pytest.mark.api\n    @pytest.mark.xfail(\n        strict=True,\n        raises=KnownDefectError,\n        reason=&amp;quot;BUG-003: category navigation reuses the invalid page after a pagination error&amp;quot;,\n    )\n    def test_category_navigation_resets_page_after_pagination_error(\n        discover_page: DiscoverPage,\n    ) -&amp;gt; None:\n        &amp;quot;&amp;quot;&amp;quot;A failed page request must not determine the next category&amp;#x27;s page.&amp;quot;&amp;quot;&amp;quot;\n        discover_page.open()\n        page_numbers = discover_page.pagination_page_numbers()\n        assert page_numbers\n        unsupported_page = max(page_numbers)\n        unsupported_response = discover_page.select_page(unsupported_page)\n        assert unsupported_page &amp;gt; SERVICE_MAX_PAGE\n        assert unsupported_response.status == 400\n        assert discover_page.response_json(unsupported_response).get(&amp;quot;status_code&amp;quot;) == 22\n        expect(discover_page.error_message).to_be_visible()\n    \n        # Every trending request is recorded, because the stale page number can be\n        # sent either side of the response that renders the category.\n        with discover_page.recording_responses(TREND_CATEGORY.endpoint) as category_responses:\n            discover_page.navigate_category(TREND_CATEGORY.label)\n            discover_page.wait_for_page_request_other_than(TREND_CATEGORY.endpoint)\n    \n        assert discover_page.page.url.endswith(TREND_CATEGORY.route)\n        assert category_responses\n    \n        successful_page_one_response = next(\n            (\n                response\n                for response in category_responses\n                if response.status == 200\n                and discover_page.response_query(response).get(&amp;quot;page&amp;quot;) == [&amp;quot;1&amp;quot;]\n            ),\n            None,\n        )\n        assert successful_page_one_response is not None\n        successful_payload = assert_listing_response(\n            discover_page,\n            successful_page_one_response,\n            TREND_CATEGORY.endpoint,\n        )\n        assert_query_parameters(discover_page, successful_page_one_response, {&amp;quot;page&amp;quot;: &amp;quot;1&amp;quot;})\n    \n        documented_stale_responses = []\n        for response in category_responses:\n            if (\n                discover_page.response_query(response).get(&amp;quot;page&amp;quot;) == [str(unsupported_page)]\n                and response.status == 400\n                and discover_page.response_json(response).get(&amp;quot;status_code&amp;quot;) == 22\n            ):\n                documented_stale_responses.append(response)\n    \n        try:\n&amp;gt;           assert_results_are_rendered(\n                discover_page,\n                successful_payload,\n                title_field=&amp;quot;title&amp;quot;,\n            )\n\ntests/ui/test_pagination.py:208: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\ndiscover_page = &amp;lt;pages.discover_page.DiscoverPage object at 0x75b0a0426240&amp;gt;\npayload = {&amp;#x27;page&amp;#x27;: 1, &amp;#x27;results&amp;#x27;: [{&amp;#x27;adult&amp;#x27;: False, &amp;#x27;backdrop_path&amp;#x27;: &amp;#x27;/xSJJQeAp9GBFmiKusysTRG6jQjt.jpg&amp;#x27;, &amp;#x27;genre_ids&amp;#x27;: [80, 18, 53...m38G1W8UsnSpqmWn.jpg&amp;#x27;, &amp;#x27;genre_ids&amp;#x27;: [10749, 18], &amp;#x27;id&amp;#x27;: 1516698, ...}, ...], &amp;#x27;total_pages&amp;#x27;: 500, &amp;#x27;total_results&amp;#x27;: 10000}\n\n    def assert_results_are_rendered(\n        discover_page: DiscoverPage,\n        payload: dict[str, Any],\n        *,\n        title_field: str | None = None,\n    ) -&amp;gt; None:\n        &amp;quot;&amp;quot;&amp;quot;Assert every returned record is rendered as a titled card without an app error.\n    \n        Pass `title_field` to compare the cards with the payload title by title; omit\n        it when only the presence of a title can be relied on.\n        &amp;quot;&amp;quot;&amp;quot;\n        results = payload[&amp;quot;results&amp;quot;]\n    \n        assert results\n&amp;gt;       expect(discover_page.result_cards).to_have_count(len(results))\nE       AssertionError: Locator expected to have count &amp;#x27;20&amp;#x27;\nE       Actual value: 0 \nE       Call log:\nE         - Expect &amp;quot;to_have_count&amp;quot; with timeout 5000ms\nE         - waiting for locator(&amp;quot;div.grid&amp;quot;).first.locator(&amp;quot;:scope &amp;gt; div&amp;quot;)\nE           14 \u00d7 locator resolved to 0 elements\nE              - unexpected value &amp;quot;0&amp;quot;\n\ntests/assertions.py:53: AssertionError\n\nThe above exception was the direct cause of the following exception:\n\ndiscover_page = &amp;lt;pages.discover_page.DiscoverPage object at 0x75b0a0426240&amp;gt;\n\n    @pytest.mark.regression\n    @pytest.mark.ui\n    @pytest.mark.api\n    @pytest.mark.xfail(\n        strict=True,\n        raises=KnownDefectError,\n        reason=&amp;quot;BUG-003: category navigation reuses the invalid page after a pagination error&amp;quot;,\n    )\n    def test_category_navigation_resets_page_after_pagination_error(\n        discover_page: DiscoverPage,\n    ) -&amp;gt; None:\n        &amp;quot;&amp;quot;&amp;quot;A failed page request must not determine the next category&amp;#x27;s page.&amp;quot;&amp;quot;&amp;quot;\n        discover_page.open()\n        page_numbers = discover_page.pagination_page_numbers()\n        assert page_numbers\n        unsupported_page = max(page_numbers)\n        unsupported_response = discover_page.select_page(unsupported_page)\n        assert unsupported_page &amp;gt; SERVICE_MAX_PAGE\n        assert unsupported_response.status == 400\n        assert discover_page.response_json(unsupported_response).get(&amp;quot;status_code&amp;quot;) == 22\n        expect(discover_page.error_message).to_be_visible()\n    \n        # Every trending request is recorded, because the stale page number can be\n        # sent either side of the response that renders the category.\n        with discover_page.recording_responses(TREND_CATEGORY.endpoint) as category_responses:\n            discover_page.navigate_category(TREND_CATEGORY.label)\n            discover_page.wait_for_page_request_other_than(TREND_CATEGORY.endpoint)\n    \n        assert discover_page.page.url.endswith(TREND_CATEGORY.route)\n        assert category_responses\n    \n        successful_page_one_response = next(\n            (\n                response\n                for response in category_responses\n                if response.status == 200\n                and discover_page.response_query(response).get(&amp;quot;page&amp;quot;) == [&amp;quot;1&amp;quot;]\n            ),\n            None,\n        )\n        assert successful_page_one_response is not None\n        successful_payload = assert_listing_response(\n            discover_page,\n            successful_page_one_response,\n            TREND_CATEGORY.endpoint,\n        )\n        assert_query_parameters(discover_page, successful_page_one_response, {&amp;quot;page&amp;quot;: &amp;quot;1&amp;quot;})\n    \n        documented_stale_responses = []\n        for response in category_responses:\n            if (\n                discover_page.response_query(response).get(&amp;quot;page&amp;quot;) == [str(unsupported_page)]\n                and response.status == 400\n                and discover_page.response_json(response).get(&amp;quot;status_code&amp;quot;) == 22\n            ):\n                documented_stale_responses.append(response)\n    \n        try:\n            assert_results_are_rendered(\n                discover_page,\n                successful_payload,\n                title_field=&amp;quot;title&amp;quot;,\n            )\n        except AssertionError as recovery_failure:\n            final_error_state = (\n                discover_page.error_message.is_visible() and discover_page.result_cards.count() == 0\n            )\n            if documented_stale_responses and final_error_state:\n&amp;gt;               raise KnownDefectError(\n                    &amp;quot;BUG-003: the rejected stale page request determined the final error state&amp;quot;\n                ) from recovery_failure\nE               tests.known_defects.KnownDefectError: BUG-003: the rejected stale page request determined the final error state\n\ntests/ui/test_pagination.py:218: KnownDefectError\n\n------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_page page=58739 endpoint=/3/movie/popular\nINFO     pages.discover_page:structured_logging.py:20 action=navigate_category category=Trend\n\n&#34;}], &#34;tests/ui/test_routes.py::test_category_route_supports_direct_navigation[chromium-popular]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;XFailed&#34;, &#34;testId&#34;: &#34;tests/ui/test_routes.py::test_category_route_supports_direct_navigation[chromium-popular]&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;XFailed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_routes.py::test_category_route_supports_direct_navigation[chromium-popular]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;discover_page = &amp;lt;pages.discover_page.DiscoverPage object at 0x75b0a040f6e0&amp;gt;\nroute = &amp;#x27;/popular&amp;#x27;\n\n    @pytest.mark.regression\n    @pytest.mark.ui\n    @pytest.mark.parametrize(&amp;quot;route&amp;quot;, DIRECT_ROUTE_CASES)\n    @pytest.mark.xfail(\n        strict=True,\n        raises=KnownDefectError,\n        reason=&amp;quot;BUG-002: direct category routes return the hosting provider&amp;#x27;s 404 page&amp;quot;,\n    )\n    def test_category_route_supports_direct_navigation(\n        discover_page: DiscoverPage,\n        route: str,\n    ) -&amp;gt; None:\n        &amp;quot;&amp;quot;&amp;quot;A valid category route loads the application when opened directly.&amp;quot;&amp;quot;&amp;quot;\n        application_response = discover_page.page.request.get(&amp;quot;/&amp;quot;)\n        assert application_response.status == 200\n    \n        document_response = discover_page.open_direct(route)\n        assert document_response is not None\n        if document_response.status == 404:\n&amp;gt;           raise KnownDefectError(f&amp;quot;BUG-002: direct navigation to {route} returned HTTP 404&amp;quot;)\nE           tests.known_defects.KnownDefectError: BUG-002: direct navigation to /popular returned HTTP 404\n\ntests/ui/test_routes.py:34: KnownDefectError\n\n------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open_direct path=/popular\n\n&#34;}], &#34;tests/ui/test_smoke.py::test_homepage_loads_default_movie_results[chromium]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/ui/test_smoke.py::test_homepage_loads_default_movie_results[chromium]&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_smoke.py::test_homepage_loads_default_movie_results[chromium]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\n\n&#34;}], &#34;tests/api/test_discover_network.py::test_rating_request_response_and_ui_are_consistent[chromium-three-and-a-half-stars]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/api/test_discover_network.py::test_rating_request_response_and_ui_are_consistent[chromium-three-and-a-half-stars]&#34;, &#34;duration&#34;: &#34;00:00:03&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/api/test_discover_network.py::test_rating_request_response_and_ui_are_consistent[chromium-three-and-a-half-stars]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:03&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_rating rating=3.5\n\n&#34;}], &#34;tests/ui/test_categories.py::test_category_navigation_loads_results[chromium-trend]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/ui/test_categories.py::test_category_navigation_loads_results[chromium-trend]&#34;, &#34;duration&#34;: &#34;00:00:03&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_categories.py::test_category_navigation_loads_results[chromium-trend]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:03&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=navigate_category category=Trend\n\n&#34;}], &#34;tests/ui/test_categories.py::test_media_type_filter_loads_matching_result_fields[chromium-tv-shows]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/ui/test_categories.py::test_media_type_filter_loads_matching_result_fields[chromium-tv-shows]&#34;, &#34;duration&#34;: &#34;00:00:03&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_categories.py::test_media_type_filter_loads_matching_result_fields[chromium-tv-shows]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:03&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_type type=TV Shows\n\n&#34;}], &#34;tests/ui/test_filters.py::test_rating_filter_renders_results_at_or_above_selected_boundary[chromium-three-and-a-half-stars]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/ui/test_filters.py::test_rating_filter_renders_results_at_or_above_selected_boundary[chromium-three-and-a-half-stars]&#34;, &#34;duration&#34;: &#34;00:00:03&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_filters.py::test_rating_filter_renders_results_at_or_above_selected_boundary[chromium-three-and-a-half-stars]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:03&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_rating rating=3.5\n\n&#34;}], &#34;tests/ui/test_routes.py::test_category_route_supports_direct_navigation[chromium-trend]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;XFailed&#34;, &#34;testId&#34;: &#34;tests/ui/test_routes.py::test_category_route_supports_direct_navigation[chromium-trend]&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;XFailed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_routes.py::test_category_route_supports_direct_navigation[chromium-trend]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;discover_page = &amp;lt;pages.discover_page.DiscoverPage object at 0x75b0a0454650&amp;gt;\nroute = &amp;#x27;/trend&amp;#x27;\n\n    @pytest.mark.regression\n    @pytest.mark.ui\n    @pytest.mark.parametrize(&amp;quot;route&amp;quot;, DIRECT_ROUTE_CASES)\n    @pytest.mark.xfail(\n        strict=True,\n        raises=KnownDefectError,\n        reason=&amp;quot;BUG-002: direct category routes return the hosting provider&amp;#x27;s 404 page&amp;quot;,\n    )\n    def test_category_route_supports_direct_navigation(\n        discover_page: DiscoverPage,\n        route: str,\n    ) -&amp;gt; None:\n        &amp;quot;&amp;quot;&amp;quot;A valid category route loads the application when opened directly.&amp;quot;&amp;quot;&amp;quot;\n        application_response = discover_page.page.request.get(&amp;quot;/&amp;quot;)\n        assert application_response.status == 200\n    \n        document_response = discover_page.open_direct(route)\n        assert document_response is not None\n        if document_response.status == 404:\n&amp;gt;           raise KnownDefectError(f&amp;quot;BUG-002: direct navigation to {route} returned HTTP 404&amp;quot;)\nE           tests.known_defects.KnownDefectError: BUG-002: direct navigation to /trend returned HTTP 404\n\ntests/ui/test_routes.py:34: KnownDefectError\n\n------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open_direct path=/trend\n\n&#34;}], &#34;tests/api/test_discover_network.py::test_rating_request_response_and_ui_are_consistent[chromium-four-stars]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/api/test_discover_network.py::test_rating_request_response_and_ui_are_consistent[chromium-four-stars]&#34;, &#34;duration&#34;: &#34;00:00:04&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/api/test_discover_network.py::test_rating_request_response_and_ui_are_consistent[chromium-four-stars]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:04&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_rating rating=4.0\n\n&#34;}], &#34;tests/ui/test_categories.py::test_category_navigation_loads_results[chromium-newest]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/ui/test_categories.py::test_category_navigation_loads_results[chromium-newest]&#34;, &#34;duration&#34;: &#34;00:00:05&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_categories.py::test_category_navigation_loads_results[chromium-newest]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:05&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=navigate_category category=Newest\n\n&#34;}], &#34;tests/ui/test_filters.py::test_rating_filter_renders_results_at_or_above_selected_boundary[chromium-four-stars]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/ui/test_filters.py::test_rating_filter_renders_results_at_or_above_selected_boundary[chromium-four-stars]&#34;, &#34;duration&#34;: &#34;00:00:03&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_filters.py::test_rating_filter_renders_results_at_or_above_selected_boundary[chromium-four-stars]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:03&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_rating rating=4.0\n\n&#34;}], &#34;tests/ui/test_routes.py::test_category_route_supports_direct_navigation[chromium-newest]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;XFailed&#34;, &#34;testId&#34;: &#34;tests/ui/test_routes.py::test_category_route_supports_direct_navigation[chromium-newest]&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;XFailed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_routes.py::test_category_route_supports_direct_navigation[chromium-newest]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;discover_page = &amp;lt;pages.discover_page.DiscoverPage object at 0x75b0a02f5f10&amp;gt;\nroute = &amp;#x27;/new&amp;#x27;\n\n    @pytest.mark.regression\n    @pytest.mark.ui\n    @pytest.mark.parametrize(&amp;quot;route&amp;quot;, DIRECT_ROUTE_CASES)\n    @pytest.mark.xfail(\n        strict=True,\n        raises=KnownDefectError,\n        reason=&amp;quot;BUG-002: direct category routes return the hosting provider&amp;#x27;s 404 page&amp;quot;,\n    )\n    def test_category_route_supports_direct_navigation(\n        discover_page: DiscoverPage,\n        route: str,\n    ) -&amp;gt; None:\n        &amp;quot;&amp;quot;&amp;quot;A valid category route loads the application when opened directly.&amp;quot;&amp;quot;&amp;quot;\n        application_response = discover_page.page.request.get(&amp;quot;/&amp;quot;)\n        assert application_response.status == 200\n    \n        document_response = discover_page.open_direct(route)\n        assert document_response is not None\n        if document_response.status == 404:\n&amp;gt;           raise KnownDefectError(f&amp;quot;BUG-002: direct navigation to {route} returned HTTP 404&amp;quot;)\nE           tests.known_defects.KnownDefectError: BUG-002: direct navigation to /new returned HTTP 404\n\ntests/ui/test_routes.py:34: KnownDefectError\n\n------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open_direct path=/new\n\n&#34;}], &#34;tests/api/test_discover_network.py::test_rating_request_response_and_ui_are_consistent[chromium-four-and-a-half-stars]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/api/test_discover_network.py::test_rating_request_response_and_ui_are_consistent[chromium-four-and-a-half-stars]&#34;, &#34;duration&#34;: &#34;00:00:04&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/api/test_discover_network.py::test_rating_request_response_and_ui_are_consistent[chromium-four-and-a-half-stars]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:04&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_rating rating=4.5\n\n&#34;}], &#34;tests/ui/test_categories.py::test_category_navigation_loads_results[chromium-top-rated]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/ui/test_categories.py::test_category_navigation_loads_results[chromium-top-rated]&#34;, &#34;duration&#34;: &#34;00:00:03&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_categories.py::test_category_navigation_loads_results[chromium-top-rated]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:03&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=navigate_category category=Top rated\n\n&#34;}], &#34;tests/ui/test_filters.py::test_rating_filter_renders_results_at_or_above_selected_boundary[chromium-four-and-a-half-stars]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/ui/test_filters.py::test_rating_filter_renders_results_at_or_above_selected_boundary[chromium-four-and-a-half-stars]&#34;, &#34;duration&#34;: &#34;00:00:03&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_filters.py::test_rating_filter_renders_results_at_or_above_selected_boundary[chromium-four-and-a-half-stars]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:03&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_rating rating=4.5\n\n&#34;}], &#34;tests/ui/test_routes.py::test_category_route_supports_direct_navigation[chromium-top-rated]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;XFailed&#34;, &#34;testId&#34;: &#34;tests/ui/test_routes.py::test_category_route_supports_direct_navigation[chromium-top-rated]&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;XFailed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_routes.py::test_category_route_supports_direct_navigation[chromium-top-rated]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;discover_page = &amp;lt;pages.discover_page.DiscoverPage object at 0x75b09bf83e90&amp;gt;\nroute = &amp;#x27;/top&amp;#x27;\n\n    @pytest.mark.regression\n    @pytest.mark.ui\n    @pytest.mark.parametrize(&amp;quot;route&amp;quot;, DIRECT_ROUTE_CASES)\n    @pytest.mark.xfail(\n        strict=True,\n        raises=KnownDefectError,\n        reason=&amp;quot;BUG-002: direct category routes return the hosting provider&amp;#x27;s 404 page&amp;quot;,\n    )\n    def test_category_route_supports_direct_navigation(\n        discover_page: DiscoverPage,\n        route: str,\n    ) -&amp;gt; None:\n        &amp;quot;&amp;quot;&amp;quot;A valid category route loads the application when opened directly.&amp;quot;&amp;quot;&amp;quot;\n        application_response = discover_page.page.request.get(&amp;quot;/&amp;quot;)\n        assert application_response.status == 200\n    \n        document_response = discover_page.open_direct(route)\n        assert document_response is not None\n        if document_response.status == 404:\n&amp;gt;           raise KnownDefectError(f&amp;quot;BUG-002: direct navigation to {route} returned HTTP 404&amp;quot;)\nE           tests.known_defects.KnownDefectError: BUG-002: direct navigation to /top returned HTTP 404\n\ntests/ui/test_routes.py:34: KnownDefectError\n\n------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open_direct path=/top\n\n&#34;}], &#34;tests/api/test_discover_network.py::test_rating_request_response_and_ui_are_consistent[chromium-five-stars]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/api/test_discover_network.py::test_rating_request_response_and_ui_are_consistent[chromium-five-stars]&#34;, &#34;duration&#34;: &#34;00:00:04&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/api/test_discover_network.py::test_rating_request_response_and_ui_are_consistent[chromium-five-stars]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:04&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_rating rating=5.0\n\n&#34;}], &#34;tests/ui/test_filters.py::test_rating_filter_renders_results_at_or_above_selected_boundary[chromium-five-stars]&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/ui/test_filters.py::test_rating_filter_renders_results_at_or_above_selected_boundary[chromium-five-stars]&#34;, &#34;duration&#34;: &#34;00:00:03&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/ui/test_filters.py::test_rating_filter_renders_results_at_or_above_selected_boundary[chromium-five-stars]&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:03&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nINFO     tests.conftest:structured_logging.py:20 action=create_page_object page_object=DiscoverPage\n\n------------------------------ Captured log call -------------------------------\nINFO     pages.discover_page:structured_logging.py:20 action=open path=/\nINFO     pages.discover_page:structured_logging.py:20 action=select_rating rating=5.0\n\n&#34;}]}, &#34;renderCollapsed&#34;: [&#34;passed&#34;], &#34;initialSort&#34;: &#34;result&#34;, &#34;title&#34;: &#34;report.html&#34;}"></div>
+    <script>
+      (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+const { getCollapsedCategory, setCollapsedIds } = require('./storage.js')
+
+class DataManager {
+    setManager(data) {
+        const collapsedCategories = [...getCollapsedCategory(data.renderCollapsed)]
+        const collapsedIds = []
+        const tests = Object.values(data.tests).flat().map((test, index) => {
+            const collapsed = collapsedCategories.includes(test.result.toLowerCase())
+            const id = `test_${index}`
+            if (collapsed) {
+                collapsedIds.push(id)
+            }
+            return {
+                ...test,
+                id,
+                collapsed,
+            }
+        })
+        const dataBlob = { ...data, tests }
+        this.data = { ...dataBlob }
+        this.renderData = { ...dataBlob }
+        setCollapsedIds(collapsedIds)
+    }
+
+    get allData() {
+        return { ...this.data }
+    }
+
+    resetRender() {
+        this.renderData = { ...this.data }
+    }
+
+    setRender(data) {
+        this.renderData.tests = [...data]
+    }
+
+    toggleCollapsedItem(id) {
+        this.renderData.tests = this.renderData.tests.map((test) =>
+            test.id === id ? { ...test, collapsed: !test.collapsed } : test,
+        )
+    }
+
+    set allCollapsed(collapsed) {
+        this.renderData = { ...this.renderData, tests: [...this.renderData.tests.map((test) => (
+            { ...test, collapsed }
+        ))] }
+    }
+
+    get testSubset() {
+        return [...this.renderData.tests]
+    }
+
+    get environment() {
+        return this.renderData.environment
+    }
+
+    get initialSort() {
+        return this.data.initialSort
+    }
+}
+
+module.exports = {
+    manager: new DataManager(),
+}
+
+},{"./storage.js":8}],2:[function(require,module,exports){
+const mediaViewer = require('./mediaviewer.js')
+const templateEnvRow = document.getElementById('template_environment_row')
+const templateResult = document.getElementById('template_results-table__tbody')
+
+function htmlToElements(html) {
+    const temp = document.createElement('template')
+    temp.innerHTML = html
+    return temp.content.childNodes
+}
+
+const find = (selector, elem) => {
+    if (!elem) {
+        elem = document
+    }
+    return elem.querySelector(selector)
+}
+
+const findAll = (selector, elem) => {
+    if (!elem) {
+        elem = document
+    }
+    return [...elem.querySelectorAll(selector)]
+}
+
+const dom = {
+    getStaticRow: (key, value) => {
+        const envRow = templateEnvRow.content.cloneNode(true)
+        const isObj = typeof value === 'object' && value !== null
+        const values = isObj ? Object.keys(value).map((k) => `${k}: ${value[k]}`) : null
+
+        const valuesElement = htmlToElements(
+            values ? `<ul>${values.map((val) => `<li>${val}</li>`).join('')}<ul>` : `<div>${value}</div>`)[0]
+        const td = findAll('td', envRow)
+        td[0].textContent = key
+        td[1].appendChild(valuesElement)
+
+        return envRow
+    },
+    getResultTBody: ({ testId, id, log, extras, resultsTableRow, tableHtml, result, collapsed }) => {
+        const resultBody = templateResult.content.cloneNode(true)
+        resultBody.querySelector('tbody').classList.add(result.toLowerCase())
+        resultBody.querySelector('tbody').id = testId
+        resultBody.querySelector('.collapsible').dataset.id = id
+
+        resultsTableRow.forEach((html) => {
+            const t = document.createElement('template')
+            t.innerHTML = html
+            resultBody.querySelector('.collapsible').appendChild(t.content)
+        })
+
+        if (log) {
+            // Wrap lines starting with "E" with span.error to color those lines red
+            const wrappedLog = log.replace(/^E.*$/gm, (match) => `<span class="error">${match}</span>`)
+            resultBody.querySelector('.log').innerHTML = wrappedLog
+        } else {
+            resultBody.querySelector('.log').remove()
+        }
+
+        if (collapsed) {
+            resultBody.querySelector('.collapsible > .col-result')?.classList.add('collapsed')
+            resultBody.querySelector('.extras-row').classList.add('hidden')
+        } else {
+            resultBody.querySelector('.collapsible > .col-result')?.classList.remove('collapsed')
+        }
+
+        const media = []
+        extras?.forEach(({ name, format_type, content }) => {
+            if (['image', 'video'].includes(format_type)) {
+                media.push({ path: content, name, format_type })
+            }
+
+            if (format_type === 'html') {
+                resultBody.querySelector('.extraHTML').insertAdjacentHTML('beforeend', `<div>${content}</div>`)
+            }
+        })
+        mediaViewer.setup(resultBody, media)
+
+        // Add custom html from the pytest_html_results_table_html hook
+        tableHtml?.forEach((item) => {
+            resultBody.querySelector('td[class="extra"]').insertAdjacentHTML('beforeend', item)
+        })
+
+        return resultBody
+    },
+}
+
+module.exports = {
+    dom,
+    htmlToElements,
+    find,
+    findAll,
+}
+
+},{"./mediaviewer.js":6}],3:[function(require,module,exports){
+const { manager } = require('./datamanager.js')
+const { doSort } = require('./sort.js')
+const storageModule = require('./storage.js')
+
+const getFilteredSubSet = (filter) =>
+    manager.allData.tests.filter(({ result }) => filter.includes(result.toLowerCase()))
+
+const doInitFilter = () => {
+    const currentFilter = storageModule.getVisible()
+    const filteredSubset = getFilteredSubSet(currentFilter)
+    manager.setRender(filteredSubset)
+}
+
+const doFilter = (type, show) => {
+    if (show) {
+        storageModule.showCategory(type)
+    } else {
+        storageModule.hideCategory(type)
+    }
+
+    const currentFilter = storageModule.getVisible()
+    const filteredSubset = getFilteredSubSet(currentFilter)
+    manager.setRender(filteredSubset)
+
+    const sortColumn = storageModule.getSort()
+    doSort(sortColumn, true)
+}
+
+module.exports = {
+    doFilter,
+    doInitFilter,
+}
+
+},{"./datamanager.js":1,"./sort.js":7,"./storage.js":8}],4:[function(require,module,exports){
+const { redraw, bindEvents, renderStatic } = require('./main.js')
+const { doInitFilter } = require('./filter.js')
+const { doInitSort } = require('./sort.js')
+const { manager } = require('./datamanager.js')
+const data = JSON.parse(document.getElementById('data-container').dataset.jsonblob)
+
+function init() {
+    manager.setManager(data)
+    doInitFilter()
+    doInitSort()
+    renderStatic()
+    redraw()
+    bindEvents()
+}
+
+init()
+
+},{"./datamanager.js":1,"./filter.js":3,"./main.js":5,"./sort.js":7}],5:[function(require,module,exports){
+const { dom, find, findAll } = require('./dom.js')
+const { manager } = require('./datamanager.js')
+const { doSort } = require('./sort.js')
+const { doFilter } = require('./filter.js')
+const {
+    getVisible,
+    getCollapsedIds,
+    setCollapsedIds,
+    getSort,
+    getSortDirection,
+    possibleFilters,
+} = require('./storage.js')
+
+const removeChildren = (node) => {
+    while (node.firstChild) {
+        node.removeChild(node.firstChild)
+    }
+}
+
+const renderStatic = () => {
+    const renderEnvironmentTable = () => {
+        const environment = manager.environment
+        const rows = Object.keys(environment).map((key) => dom.getStaticRow(key, environment[key]))
+        const table = document.getElementById('environment')
+        removeChildren(table)
+        rows.forEach((row) => table.appendChild(row))
+    }
+    renderEnvironmentTable()
+}
+
+const addItemToggleListener = (elem) => {
+    elem.addEventListener('click', ({ target }) => {
+        const id = target.parentElement.dataset.id
+        manager.toggleCollapsedItem(id)
+
+        const collapsedIds = getCollapsedIds()
+        if (collapsedIds.includes(id)) {
+            const updated = collapsedIds.filter((item) => item !== id)
+            setCollapsedIds(updated)
+        } else {
+            collapsedIds.push(id)
+            setCollapsedIds(collapsedIds)
+        }
+        redraw()
+    })
+}
+
+const renderContent = (tests) => {
+    const sortAttr = getSort(manager.initialSort)
+    const sortAsc = JSON.parse(getSortDirection())
+    const rows = tests.map(dom.getResultTBody)
+    const table = document.getElementById('results-table')
+    const tableHeader = document.getElementById('results-table-head')
+
+    const newTable = document.createElement('table')
+    newTable.id = 'results-table'
+
+    // remove all sorting classes and set the relevant
+    findAll('.sortable', tableHeader).forEach((elem) => elem.classList.remove('asc', 'desc'))
+    tableHeader.querySelector(`.sortable[data-column-type="${sortAttr}"]`)?.classList.add(sortAsc ? 'desc' : 'asc')
+    newTable.appendChild(tableHeader)
+
+    if (!rows.length) {
+        const emptyTable = document.getElementById('template_results-table__body--empty').content.cloneNode(true)
+        newTable.appendChild(emptyTable)
+    } else {
+        rows.forEach((row) => {
+            if (!!row) {
+                findAll('.collapsible td:not(.col-links', row).forEach(addItemToggleListener)
+                find('.logexpander', row).addEventListener('click',
+                    (evt) => evt.target.parentNode.classList.toggle('expanded'),
+                )
+                newTable.appendChild(row)
+            }
+        })
+    }
+
+    table.replaceWith(newTable)
+}
+
+const renderDerived = () => {
+    const currentFilter = getVisible()
+    possibleFilters.forEach((result) => {
+        const input = document.querySelector(`input[data-test-result="${result}"]`)
+        input.checked = currentFilter.includes(result)
+    })
+}
+
+const bindEvents = () => {
+    const filterColumn = (evt) => {
+        const { target: element } = evt
+        const { testResult } = element.dataset
+
+        doFilter(testResult, element.checked)
+        const collapsedIds = getCollapsedIds()
+        const updated = manager.renderData.tests.map((test) => {
+            return {
+                ...test,
+                collapsed: collapsedIds.includes(test.id),
+            }
+        })
+        manager.setRender(updated)
+        redraw()
+    }
+
+    const header = document.getElementById('environment-header')
+    header.addEventListener('click', () => {
+        const table = document.getElementById('environment')
+        table.classList.toggle('hidden')
+        header.classList.toggle('collapsed')
+    })
+
+    findAll('input[name="filter_checkbox"]').forEach((elem) => {
+        elem.addEventListener('click', filterColumn)
+    })
+
+    findAll('.sortable').forEach((elem) => {
+        elem.addEventListener('click', (evt) => {
+            const { target: element } = evt
+            const { columnType } = element.dataset
+            doSort(columnType)
+            redraw()
+        })
+    })
+
+    document.getElementById('show_all_details').addEventListener('click', () => {
+        manager.allCollapsed = false
+        setCollapsedIds([])
+        redraw()
+    })
+    document.getElementById('hide_all_details').addEventListener('click', () => {
+        manager.allCollapsed = true
+        const allIds = manager.renderData.tests.map((test) => test.id)
+        setCollapsedIds(allIds)
+        redraw()
+    })
+}
+
+const redraw = () => {
+    const { testSubset } = manager
+
+    renderContent(testSubset)
+    renderDerived()
+}
+
+module.exports = {
+    redraw,
+    bindEvents,
+    renderStatic,
+}
+
+},{"./datamanager.js":1,"./dom.js":2,"./filter.js":3,"./sort.js":7,"./storage.js":8}],6:[function(require,module,exports){
+class MediaViewer {
+    constructor(assets) {
+        this.assets = assets
+        this.index = 0
+    }
+
+    nextActive() {
+        this.index = this.index === this.assets.length - 1 ? 0 : this.index + 1
+        return [this.activeFile, this.index]
+    }
+
+    prevActive() {
+        this.index = this.index === 0 ? this.assets.length - 1 : this.index -1
+        return [this.activeFile, this.index]
+    }
+
+    get currentIndex() {
+        return this.index
+    }
+
+    get activeFile() {
+        return this.assets[this.index]
+    }
+}
+
+
+const setup = (resultBody, assets) => {
+    if (!assets.length) {
+        resultBody.querySelector('.media').classList.add('hidden')
+        return
+    }
+
+    const mediaViewer = new MediaViewer(assets)
+    const container = resultBody.querySelector('.media-container')
+    const leftArrow = resultBody.querySelector('.media-container__nav--left')
+    const rightArrow = resultBody.querySelector('.media-container__nav--right')
+    const mediaName = resultBody.querySelector('.media__name')
+    const counter = resultBody.querySelector('.media__counter')
+    const imageEl = resultBody.querySelector('img')
+    const sourceEl = resultBody.querySelector('source')
+    const videoEl = resultBody.querySelector('video')
+
+    const setImg = (media, index) => {
+        if (media?.format_type === 'image') {
+            imageEl.src = media.path
+
+            imageEl.classList.remove('hidden')
+            videoEl.classList.add('hidden')
+        } else if (media?.format_type === 'video') {
+            sourceEl.src = media.path
+
+            videoEl.classList.remove('hidden')
+            imageEl.classList.add('hidden')
+        }
+
+        mediaName.innerText = media?.name
+        counter.innerText = `${index + 1} / ${assets.length}`
+    }
+    setImg(mediaViewer.activeFile, mediaViewer.currentIndex)
+
+    const moveLeft = () => {
+        const [media, index] = mediaViewer.prevActive()
+        setImg(media, index)
+    }
+    const doRight = () => {
+        const [media, index] = mediaViewer.nextActive()
+        setImg(media, index)
+    }
+    const openImg = () => {
+        window.open(mediaViewer.activeFile.path, '_blank')
+    }
+    if (assets.length === 1) {
+        container.classList.add('media-container--fullscreen')
+    } else {
+        leftArrow.addEventListener('click', moveLeft)
+        rightArrow.addEventListener('click', doRight)
+    }
+    imageEl.addEventListener('click', openImg)
+}
+
+module.exports = {
+    setup,
+}
+
+},{}],7:[function(require,module,exports){
+const { manager } = require('./datamanager.js')
+const storageModule = require('./storage.js')
+
+const genericSort = (list, key, ascending, customOrder) => {
+    let sorted
+    if (customOrder) {
+        sorted = list.sort((a, b) => {
+            const aValue = a.result.toLowerCase()
+            const bValue = b.result.toLowerCase()
+
+            const aIndex = customOrder.findIndex((item) => item.toLowerCase() === aValue)
+            const bIndex = customOrder.findIndex((item) => item.toLowerCase() === bValue)
+
+            // Compare the indices to determine the sort order
+            return aIndex - bIndex
+        })
+    } else {
+        sorted = list.sort((a, b) => a[key] === b[key] ? 0 : a[key] > b[key] ? 1 : -1)
+    }
+
+    if (ascending) {
+        sorted.reverse()
+    }
+    return sorted
+}
+
+const durationSort = (list, ascending) => {
+    const parseDuration = (duration) => {
+        if (duration.includes(':')) {
+            // If it's in the format "HH:mm:ss"
+            const [hours, minutes, seconds] = duration.split(':').map(Number)
+            return (hours * 3600 + minutes * 60 + seconds) * 1000
+        } else {
+            // If it's in the format "nnn ms"
+            return parseInt(duration)
+        }
+    }
+    const sorted = list.sort((a, b) => parseDuration(a['duration']) - parseDuration(b['duration']))
+    if (ascending) {
+        sorted.reverse()
+    }
+    return sorted
+}
+
+const doInitSort = () => {
+    const type = storageModule.getSort(manager.initialSort)
+    const ascending = storageModule.getSortDirection()
+    const list = manager.testSubset
+    const initialOrder = ['Error', 'Failed', 'Rerun', 'XFailed', 'XPassed', 'Skipped', 'Passed']
+
+    storageModule.setSort(type)
+    storageModule.setSortDirection(ascending)
+
+    if (type?.toLowerCase() === 'original') {
+        manager.setRender(list)
+    } else {
+        let sortedList
+        switch (type) {
+        case 'duration':
+            sortedList = durationSort(list, ascending)
+            break
+        case 'result':
+            sortedList = genericSort(list, type, ascending, initialOrder)
+            break
+        default:
+            sortedList = genericSort(list, type, ascending)
+            break
+        }
+        manager.setRender(sortedList)
+    }
+}
+
+const doSort = (type, skipDirection) => {
+    const newSortType = storageModule.getSort(manager.initialSort) !== type
+    const currentAsc = storageModule.getSortDirection()
+    let ascending
+    if (skipDirection) {
+        ascending = currentAsc
+    } else {
+        ascending = newSortType ? false : !currentAsc
+    }
+    storageModule.setSort(type)
+    storageModule.setSortDirection(ascending)
+
+    const list = manager.testSubset
+    const sortedList = type === 'duration' ? durationSort(list, ascending) : genericSort(list, type, ascending)
+    manager.setRender(sortedList)
+}
+
+module.exports = {
+    doInitSort,
+    doSort,
+}
+
+},{"./datamanager.js":1,"./storage.js":8}],8:[function(require,module,exports){
+const possibleFilters = [
+    'passed',
+    'skipped',
+    'failed',
+    'error',
+    'xfailed',
+    'xpassed',
+    'rerun',
+]
+
+const getVisible = () => {
+    const url = new URL(window.location.href)
+    const settings = new URLSearchParams(url.search).get('visible')
+    const lower = (item) => {
+        const lowerItem = item.toLowerCase()
+        if (possibleFilters.includes(lowerItem)) {
+            return lowerItem
+        }
+        return null
+    }
+    return settings === null ?
+        possibleFilters :
+        [...new Set(settings?.split(',').map(lower).filter((item) => item))]
+}
+
+const hideCategory = (categoryToHide) => {
+    const url = new URL(window.location.href)
+    const visibleParams = new URLSearchParams(url.search).get('visible')
+    const currentVisible = visibleParams ? visibleParams.split(',') : [...possibleFilters]
+    const settings = [...new Set(currentVisible)].filter((f) => f !== categoryToHide).join(',')
+
+    url.searchParams.set('visible', settings)
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const showCategory = (categoryToShow) => {
+    if (typeof window === 'undefined') {
+        return
+    }
+    const url = new URL(window.location.href)
+    const currentVisible = new URLSearchParams(url.search).get('visible')?.split(',').filter(Boolean) ||
+        [...possibleFilters]
+    const settings = [...new Set([categoryToShow, ...currentVisible])]
+    const noFilter = possibleFilters.length === settings.length || !settings.length
+
+    noFilter ? url.searchParams.delete('visible') : url.searchParams.set('visible', settings.join(','))
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const getSort = (initialSort) => {
+    const url = new URL(window.location.href)
+    let sort = new URLSearchParams(url.search).get('sort')
+    if (!sort) {
+        sort = initialSort || 'result'
+    }
+    return sort
+}
+
+const setSort = (type) => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('sort', type)
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const getCollapsedCategory = (renderCollapsed) => {
+    let categories
+    if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        const collapsedItems = new URLSearchParams(url.search).get('collapsed')
+        switch (true) {
+        case !renderCollapsed && collapsedItems === null:
+            categories = ['passed']
+            break
+        case collapsedItems?.length === 0 || /^["']{2}$/.test(collapsedItems):
+            categories = []
+            break
+        case /^all$/.test(collapsedItems) || collapsedItems === null && /^all$/.test(renderCollapsed):
+            categories = [...possibleFilters]
+            break
+        default:
+            categories = collapsedItems?.split(',').map((item) => item.toLowerCase()) || renderCollapsed
+            break
+        }
+    } else {
+        categories = []
+    }
+    return categories
+}
+
+const getSortDirection = () => JSON.parse(sessionStorage.getItem('sortAsc')) || false
+const setSortDirection = (ascending) => sessionStorage.setItem('sortAsc', ascending)
+
+const getCollapsedIds = () => JSON.parse(sessionStorage.getItem('collapsedIds')) || []
+const setCollapsedIds = (list) => sessionStorage.setItem('collapsedIds', JSON.stringify(list))
+
+module.exports = {
+    getVisible,
+    hideCategory,
+    showCategory,
+    getCollapsedIds,
+    setCollapsedIds,
+    getSort,
+    setSort,
+    getSortDirection,
+    setSortDirection,
+    getCollapsedCategory,
+    possibleFilters,
+}
+
+},{}]},{},[4]);
+    </script>
+  </footer>
+  </body>
+</html>
