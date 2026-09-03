@@ -7,7 +7,7 @@
 - **Environment:** Linux x86_64; Python 3.12.3; Playwright 1.62.0; Chromium `151.0.7922.34`
 - **Command:** `uv run pytest -q --tb=short --junitxml=artifacts/junit.xml`
 - **Duration:** 131.71 seconds (2 minutes 11 seconds)
-- **Reports:** `artifacts/report.html` (committed) and `artifacts/junit.xml` (regenerated locally and intentionally not tracked)
+- **Reports:** `artifacts/report.html` and `artifacts/junit.xml` (regenerated locally and intentionally not tracked)
 
 ### Test outcome
 
