@@ -11,7 +11,6 @@ playwright-report/
 test-results/
 artifacts/*
 !artifacts/.gitkeep
-!artifacts/report.html
 *.py[cod]
 .env
 .env.*
